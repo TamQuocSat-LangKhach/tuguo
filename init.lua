@@ -280,7 +280,7 @@ local tg__zhemou = fk.CreateTriggerSkill{
     for _, c in ipairs({"snatch", "slash"}) do
       local card = Fk:cloneCard(c)
       if not player:prohibitUse(card) then
-        local availableTargets = table.map(table.filter(room.alive_players, function(p) return p ~= player and not player:isProhibited(p, card) end), function(p) return p.id end)
+        local availableTargets = table.map(table.filter(room.alive_players, function(p) return p ~= player and not player:isProhibited(p, card) and (c == "slash" or not p:isAllNude()) end), function(p) return p.id end)
         if #availableTargets == 0 then return false end
         local targets = table.map(room:askForChoosePlayers(player, availableTargets, 1, 99, "#tg__zhemou-" .. c, self.name, false), function(pid) return room:getPlayerById(pid) end)
         room:useVirtualCard(c, nil, player, targets, self.name, true)
@@ -294,7 +294,7 @@ tg__zhuyi:addSkill(tg__danding)
 tg__zhuyi:addSkill(tg__zhemou)
 
 Fk:loadTranslationTable{
-  ["tg__zhuyi"] = "朱异",
+  ["tg__zhuyi"] = "朱异", --TG 010 锋坠镬中 插画绘制：恶童 技能设计：紫星居 称号设计：会乱武的袁绍
   ["tg__danding"] = "胆定",
   [":tg__danding"] = "当你对其他角色造成伤害后，你可以弃置你与其区域内共计两张牌，若其中没有你的牌，其摸一张牌。",
   ["tg__zhemou"] = "折谋",
@@ -332,7 +332,7 @@ local tg__weixi = fk.CreateTriggerSkill{
 
   refresh_events = {fk.BeforeHpChanged},
   can_refresh = function(self, event, target, player, data)
-    if data.damageEvent and table.every(target.room:getOtherPlayers(target), function(p) return target.hp > p.hp end) then
+    if data.damageEvent and table.every(target.room.alive_players, function(p) return target.hp > p.hp or target == p end) then
       return true
     end
   end,
@@ -351,7 +351,8 @@ local tg__weixi_draw = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local targets = {player:getMark("_tg__weixi"), player.id}
+    local targets = {player.id, player:getMark("_tg__weixi")}
+    room:doIndicate(targets[1], {targets[2]})
     room:sortPlayersByAction(targets)
     for _, pid in ipairs(targets) do
       local p = room:getPlayerById(pid)
