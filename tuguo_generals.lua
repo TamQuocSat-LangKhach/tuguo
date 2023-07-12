@@ -327,7 +327,7 @@ local tg__langbu = fk.CreateTriggerSkill{
     room:broadcastSkillInvoke(self.name)
     room:notifySkillInvoked(player, self.name, player:getMark("@tg__langbu-round") < 3 and "drawcard" or "negative")
     room:useVirtualCard("avoiding_disadvantages", nil, player, player, self.name) --摆
-    room:addPlayerMark(player, "@tg__langbu-round")
+    if not player.dead then room:addPlayerMark(player, "@tg__langbu-round") end
   end,
 }
 
@@ -343,7 +343,7 @@ local tg__siye = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     player:drawCards(math.min(player:getMark("@tg__langbu-round"), 3) + 1, self.name)
-    player.room:setPlayerMark(player, "@@tg__siye-round", 1)
+    if not player.dead then player.room:setPlayerMark(player, "@@tg__siye-round", 1) end
   end,
 }
 

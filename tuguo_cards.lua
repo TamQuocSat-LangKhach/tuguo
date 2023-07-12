@@ -20,7 +20,16 @@ local avoidingDisadvantagesTrigger = fk.CreateTriggerSkill{
     end
   end,
   on_cost = function(self, event, target, player, data)
-    local prompt = event == fk.StartJudge and "#AD-judge:::" .. data.reason or "#AD-draw:::" .. data.num
+    local num = 3
+    if player:hasSkill("tg__langbu") then --开耦！
+      num = num - player:getMark("@tg__langbu-round")
+    end
+    local prompt
+    if num < 1 then
+      prompt = "#AD-negative"
+    else
+      prompt = event == fk.StartJudge and "#AD-judge:::" .. data.reason .. ":" .. num or "#AD-draw:::" .. data.num .. ":" .. num
+    end
     local use = player.room:askForUseCard(player, "avoiding_disadvantages", nil, prompt, true)
     if use then
       self.cost_data = use
@@ -30,6 +39,7 @@ local avoidingDisadvantagesTrigger = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:useCard(self.cost_data)
+    --if player.dead then return true end
   end,
 }
 Fk:addSkill(avoidingDisadvantagesTrigger)
@@ -50,7 +60,7 @@ local avoidingDisadvantagesSkill = fk.CreateActiveSkill{
       num = num - player:getMark("@tg__langbu-round")
       if num < 1 then
         local chs = {"loseMaxHp"}
-        if player.hp > 1 then table.insert(chs, 1, "loseHp") end
+        if player.hp > 0 then table.insert(chs, 1, "loseHp") end
         local chc = room:askForChoice(player, chs, self.name)
         if chc == "loseMaxHp" then
           room:changeMaxHp(player, -1)
@@ -107,8 +117,9 @@ Fk:loadTranslationTable{
   [":avoiding_disadvantages"] = "锦囊牌<br /><b>时机</b>：当你摸牌或进行判定时<br /><b>目标</b>：你<br /><b>效果</b>：目标角色观看牌堆顶三张牌，然后将其中任意张牌置于弃牌堆。",
 
   ["avoiding_disadvantages_trigger"] = "违害就利",
-  ["#AD-judge"] = "你即将判定 %arg，可使用【违害就利】，观看牌堆顶三张牌，将其中任意张牌置于弃牌堆",
-  ["#AD-draw"] = "你即将摸 %arg 张牌，可使用【违害就利】，观看牌堆顶三张牌，将其中任意张牌置于弃牌堆",
+  ["#AD-judge"] = "你即将判定%arg，可使用【违害就利】，观看牌堆顶%arg2张牌，将其中任意张牌置于弃牌堆",
+  ["#AD-draw"] = "你即将摸%arg张牌，可使用【违害就利】，观看牌堆顶%arg2张牌，将其中任意张牌置于弃牌堆",
+  ["#AD-negative"] = "你可使用【违害就利】，选择失去1点体力或减1点体力上限",
   ["avoiding_disadvantages_skill"] = "违害就利",
   ["#AD-ask"] = "违害就利：选择将其中任意张牌置于弃牌堆",
   ["AD1"] = "将其中一张牌置于弃牌堆",
