@@ -12,6 +12,7 @@ local avoidingDisadvantagesTrigger = fk.CreateTriggerSkill{
   global = true,
   can_trigger = function(self, event, target, player, data)
     if target ~= player then return false end 
+    if event == fk.BeforeDrawCard and data.num < 1 then return false end
     for _, id in ipairs(player:getCardIds(Player.Hand)) do
       local card = Fk:getCardById(id)
       if card.name == "avoiding_disadvantages" and not player:prohibitUse(card) and not player:isProhibited(player, card) then
@@ -39,7 +40,9 @@ local avoidingDisadvantagesTrigger = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:useCard(self.cost_data)
-    --if player.dead then return true end
+    if player.dead and event == fk.BeforeDrawCard then
+      data.num = 0 --没用
+    end
   end,
 }
 Fk:addSkill(avoidingDisadvantagesTrigger)
