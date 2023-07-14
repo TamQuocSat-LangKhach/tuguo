@@ -74,9 +74,9 @@ tg__wangchang:addSkill(tg__pingxi)
 Fk:loadTranslationTable{
   ["tg__wangchang"] = "王昶", --TG001 攥策及江 插画绘制：B_LEE 技能设计：韩旭 称号设计：圣帝
   ["tg__kaiji"] = "开济",
-	[":tg__kaiji"] = "转换技，出牌阶段限一次，阳：你可以将手牌摸至X张；阴：你可以弃置X张手牌。（X为你的手牌上限）",
-	["tg__pingxi"] = "平袭",
-	[":tg__pingxi"] = "当你受到伤害后，若你的手牌数小于伤害来源，你可以弃置其两张牌，若这两张牌：花色相同，你获得其中一张；点数相同，你对其造成1点伤害。",
+  [":tg__kaiji"] = "转换技，出牌阶段限一次，阳：你可以将手牌摸至X张；阴：你可以弃置X张手牌。（X为你的手牌上限）",
+  ["tg__pingxi"] = "平袭",
+  [":tg__pingxi"] = "当你受到伤害后，若你的手牌数小于伤害来源，你可以弃置其两张牌，若这两张牌：花色相同，你获得其中一张；点数相同，你对其造成1点伤害。",
 
   ["#tg__kaiji-discard"] = "开济：弃置 %arg 张手牌",
   ["#tg__pingxi-ask"] = "平袭：你可以弃置 %src 两张牌，若这两张牌：花色相同，你获得其中一张；点数相同，你对其造成1点伤害",
@@ -88,9 +88,9 @@ Fk:loadTranslationTable{
 Fk:loadTranslationTable{
   ["tg__xuzhi"] = "徐质", --TG002 覆天穷斗 插画绘制：Aimer彩三 技能设计：竹沐雨 称号设计：雪侯
   ["tg__fenwei"] = "奋围",
-	[":tg__fenwei"] = "每回合限一次，其他角色使用【闪】或本回合第二张同名牌结算后，若没有角色处于濒死状态，你可以翻面，视为对其使用一张【决斗】或【杀】（有距离限制）。",
-	["tg__yanfa"] = "掩伐",
-	[":tg__yanfa"] = "每回合对每名角色限一次，当你对其他角色造成伤害后，你可以视为对其使用一张【杀】。若如此做，该角色可以弃置所有装备区的牌或所有手牌，然后令此【杀】无效，你获得其中点数最大的牌并翻面。",
+  [":tg__fenwei"] = "每回合限一次，其他角色使用【闪】或本回合第二张同名牌结算后，若没有角色处于濒死状态，你可以翻面，视为对其使用一张【决斗】或【杀】（有距离限制）。",
+  ["tg__yanfa"] = "掩伐",
+  [":tg__yanfa"] = "每回合对每名角色限一次，当你对其他角色造成伤害后，你可以视为对其使用一张【杀】。若如此做，该角色可以弃置所有装备区的牌或所有手牌，然后令此【杀】无效，你获得其中点数最大的牌并翻面。",
 }
 
 local tg__dailing = General(extension, "tg__dailing", "wei", 4)
@@ -173,15 +173,113 @@ tg__dailing:addSkill(tg__rangtu)
 Fk:loadTranslationTable{
   ["tg__dailing"] = "戴陵", --TG003 望断群峦 插画绘制：恶童 技能设计：恶童 称号设计：（众人集思广益） 
   ["tg__zhoubing"] = "骤兵",
-	[":tg__zhoubing"] = "其他角色的回合结束时，你可以视为使用一张无距离限制且目标数为X的【杀】（X为其本回合跳过的阶段数）。",
-	["tg__rangtu"] = "攘途",
-	[":tg__rangtu"] = "其他角色的准备阶段，若其体力值不小于你，你可以与其拼点：若你赢，你令其跳过本回合的一个阶段；若你没赢，你展示所有手牌，你下次拼点点数-2。",
+  [":tg__zhoubing"] = "其他角色的回合结束时，你可以视为使用一张无距离限制且目标数为X的【杀】（X为其本回合跳过的阶段数）。",
+  ["tg__rangtu"] = "攘途",
+  [":tg__rangtu"] = "其他角色的准备阶段，若其体力值不小于你，你可以与其拼点：若你赢，你令其跳过本回合的一个阶段；若你没赢，你展示所有手牌，你下次拼点点数-2。",
 
   ["#tg__zhoubing-choose"] = "骤兵：你可以视为使用一张无距离限制且目标数为%arg的【杀】",
   ["#tg__rangtu"] = "攘途：你可与 %dest 拼点：若你赢，你令其跳过本回合的一个阶段；若你没赢，你展示所有手牌，你下次拼点点数-2",
   ["#tg__rangtu-skip"] = "攘途：令 %src 跳过本回合的一个阶段",
   ["@@tg__rangtu"] = "攘途 拼点-2",
   ["#tg__rangtu_negative"] = "攘途",
+}
+
+local tg__luoxian = General(extension, "tg__luoxian", "shu", 4)
+
+local tg__jiancheng = fk.CreateViewAsSkill{
+  name = "tg__jiancheng",
+  card_filter = function() return false end,
+  card_num = 0,
+  pattern = "^nullification|.|.|.|.|basic",
+  interaction = function(self)
+    local allCardNames = {}
+    for _, id in ipairs(Fk:getAllCardIds()) do
+      local card = Fk:getCardById(id)
+      if not table.contains(allCardNames, card.name) and card.type == Card.TypeBasic and not card.is_derived and ((Fk.currentResponsePattern == nil and card.skill:canUse(Self)) or (Fk.currentResponsePattern and Exppattern:Parse(Fk.currentResponsePattern):match(card))) and not Self:prohibitUse(card) then
+        table.insert(allCardNames, card.name)
+      end
+    end
+    return UI.ComboBox { choices = allCardNames }
+  end,
+  view_as = function(self, cards)
+    local choice = self.interaction.data
+    if not choice then return end
+    local c = Fk:cloneCard(choice)
+    c.skillName = self.name
+    return c
+  end,
+  before_use = function(self, player, use)
+    local room = player.room
+    room:addPlayerMark(player, "@tg__jiancheng-round")
+    if #room.draw_pile < 2 then
+      room:shuffleDrawPile()
+      if #room.draw_pile < 2 then
+        room:gameOver("")
+      end
+    end
+    local cids = {room:getNCards(1)[1], room:getNCards(1, "bottom")[1]}
+    room:moveCardTo(cids, Card.Processing, nil, fk.ReasonJustMove, self.name)
+    room:sendFootnote(cids, {
+      type = "##ShowCard",
+      from = player.id,
+    }) --FIXME，展示牌堆顶牌
+    room:delay(1200)
+    if Fk:getCardById(cids[1]).color ~= Fk:getCardById(cids[2]).color then
+      local dummy = Fk:cloneCard("jink")
+      dummy:addSubcards(cids)
+      room:obtainCard(player, dummy, true, fk.ReasonPrey)
+      room:setPlayerMark(player, "@tg__jiancheng-round", 0)
+      room:setPlayerMark(player, "@@tg__jiancheng_invalid-round", 1)
+    else
+      room:moveCardTo(cids[1], Card.DrawPile, nil, fk.ReasonPut, self.name, nil, false)
+      room:moveCardTo(cids[1], Card.DrawPile, nil, fk.ReasonPut, self.name, nil, false)
+      local move1 = {
+        ids = {cids[2]},
+        fromArea = Card.Processing,
+        toArea = Card.DrawPile,
+        moveReason = fk.ReasonJustMove,
+        skillName = self.name,
+        drawPilePosition = -1,
+      }
+      local move2 = {
+        ids = {cids[1]},
+        fromArea = Card.Processing,
+        toArea = Card.DrawPile,
+        moveReason = fk.ReasonJustMove,
+        skillName = self.name,
+      }
+      room:moveCards(move1, move2)
+      --table.insert(room.draw_pile, cids[2])
+      --table.insert(room.draw_pile, 1, cids[1])
+      --room:doBroadcastNotify("UpdateDrawPile", #room.draw_pile)
+    end
+  end,
+  enabled_at_play = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryRound) < 2 and player:getMark("@@tg__jiancheng_invalid-round") == 0
+  end,
+  enabled_at_response = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryRound) < 2 and player:getMark("@@tg__jiancheng_invalid-round") == 0
+  end,
+}
+local tg__jiancheng_distance = fk.CreateDistanceSkill{
+  name = "#tg__jiancheng_distance",
+  correct_func = function(self, from, to)
+    if to:getMark("@@tg__jiancheng_invalid-round") ~= 0 and from ~= to then
+      return to:getMark("@@tg__jiancheng_invalid-round")
+    end
+  end,
+}
+tg__jiancheng:addRelatedSkill(tg__jiancheng_distance)
+
+tg__luoxian:addSkill(tg__jiancheng)
+
+Fk:loadTranslationTable{
+  ["tg__luoxian"] = "罗宪", --TG 005 不坠的坚壁 插画绘制：B_LEE 技能设计：羌溪散人 称号设计：扬林
+  ["tg__jiancheng"] = "坚城",
+  [":tg__jiancheng"] = "每轮限两次，当你需要使用/打出一种基本牌时，你可以展示牌堆顶和牌堆底各一张牌，视为使用/打出之，若这两张牌颜色不同，你获得这两张牌，然后本轮内此技能失效且其他角色至你距离+1。",
+
+  ["@tg__jiancheng-round"] = "坚城",
+  ["@@tg__jiancheng_invalid-round"] = "坚城 距离+1",
 }
 
 local tg__liuyongliuli = General(extension, "tg__liuyongliuli", "shu", 3)
@@ -281,9 +379,9 @@ tg__liuyongliuli:addSkill(tg__zhenfan)
 Fk:loadTranslationTable{
   ["tg__liuyongliuli"] = "刘永刘理", --TG 008 东藩远室 插画绘制：特异型安妮 技能设计：晓绝对 称号设计：圣帝
   ["tg__zunxiu"] = "遵修",
-	[":tg__zunxiu"] = "锁定技，当你使用或打出基本牌时，你令当前回合角色的基本牌直到回合结束均视为此牌；回合结束时，若你本回合只使用过基本牌，你摸X张牌（X为你本回合使用的牌数）。",
-	["tg__zhenfan"] = "振藩",
-	[":tg__zhenfan"] = "当你于出牌阶段使用【杀】结算后，你可以令一名其他角色选择是否使用一张【杀】，令你本回合使用【杀】的次数上限+1。",
+  [":tg__zunxiu"] = "锁定技，当你使用或打出基本牌时，你令当前回合角色的基本牌直到回合结束均视为此牌；回合结束时，若你本回合只使用过基本牌，你摸X张牌（X为你本回合使用的牌数）。",
+  ["tg__zhenfan"] = "振藩",
+  [":tg__zhenfan"] = "当你于出牌阶段使用【杀】结算后，你可以令一名其他角色选择是否使用一张【杀】，令你本回合使用【杀】的次数上限+1。",
 
   ["#tg__zunxiu_filter"] = "遵修",
   ["@tg__zunxiu-turn"] = "遵修",
