@@ -274,7 +274,7 @@ tg__jiancheng:addRelatedSkill(tg__jiancheng_distance)
 tg__luoxian:addSkill(tg__jiancheng)
 
 Fk:loadTranslationTable{
-  ["tg__luoxian"] = "罗宪", --TG 005 不坠的坚壁 插画绘制：B_LEE 技能设计：羌溪散人 称号设计：扬林
+  ["tg__luoxian"] = "罗宪", --TG005 不坠的坚壁 插画绘制：B_LEE 技能设计：羌溪散人 称号设计：扬林
   ["tg__jiancheng"] = "坚城",
   [":tg__jiancheng"] = "每轮限两次，当你需要使用/打出一种基本牌时，你可以展示牌堆顶和牌堆底各一张牌，视为使用/打出之，若这两张牌颜色不同，你获得这两张牌，然后本轮内此技能失效且其他角色至你距离+1。",
 
@@ -377,7 +377,7 @@ tg__liuyongliuli:addSkill(tg__zunxiu)
 tg__liuyongliuli:addSkill(tg__zhenfan)
 
 Fk:loadTranslationTable{
-  ["tg__liuyongliuli"] = "刘永刘理", --TG 008 东藩远室 插画绘制：特异型安妮 技能设计：晓绝对 称号设计：圣帝
+  ["tg__liuyongliuli"] = "刘永刘理", --TG008 东藩远室 插画绘制：特异型安妮 技能设计：晓绝对 称号设计：圣帝
   ["tg__zunxiu"] = "遵修",
   [":tg__zunxiu"] = "锁定技，当你使用或打出基本牌时，你令当前回合角色的基本牌直到回合结束均视为此牌；回合结束时，若你本回合只使用过基本牌，你摸X张牌（X为你本回合使用的牌数）。",
   ["tg__zhenfan"] = "振藩",
@@ -480,7 +480,7 @@ tg__zhuyi:addSkill(tg__danding)
 tg__zhuyi:addSkill(tg__zhemou)
 
 Fk:loadTranslationTable{
-  ["tg__zhuyi"] = "朱异", --TG 010 锋坠镬中 插画绘制：恶童 技能设计：紫星居 称号设计：会乱武的袁绍
+  ["tg__zhuyi"] = "朱异", --TG010 锋坠镬中 插画绘制：恶童 技能设计：紫星居 称号设计：会乱武的袁绍
   ["tg__danding"] = "胆定",
   [":tg__danding"] = "当你对其他角色造成伤害后，你可以弃置你与其区域内共计两张牌，若其中没有你的牌，其摸一张牌。",
   ["tg__zhemou"] = "折谋",
@@ -707,13 +707,100 @@ tg__yangfenghanxian:addSkill(tg__siye)
 Fk:loadTranslationTable{
   ["tg__yangfenghanxian"] = "杨奉韩暹", --TG013 构辰鸱张 插画绘制：Aimer彩三 技能设计&称号设计：会乱武的袁绍
   ["tg__langbu"] = "狼逋",
-  [":tg__langbu"] = "锁定技，当你摸牌时，你视为使用一张【违害就利】；你使用【违害就利】观看牌数-X（X为本轮〖狼逋〗已发动次数且至多为3），若已减至0，此牌的效果改为令你失去1点体力或减1点体力上限。<br/><font color='grey'>【违害就利】你从牌堆摸牌或进行判定时，对你使用。目标角色观看牌堆顶的三张牌，然后将其中任意张牌置于弃牌堆。",
+  [":tg__langbu"] = "锁定技，当你摸牌时，你视为使用一张【违害就利】；你使用【违害就利】观看牌数-X（X为本轮〖狼逋〗已发动次数且至多为3），若已减至0，此牌的效果改为令你失去1点体力或减1点体力上限。<br/><font color='grey'>【违害就利】锦囊牌 你从牌堆摸牌或进行判定时，对你使用。目标角色观看牌堆顶的三张牌，然后将其中任意张牌置于弃牌堆。",
   ["tg__siye"] = "肆野",
   [":tg__siye"] = "当主公受到【杀】的伤害后，你可以摸X+1张牌（X为本轮〖狼逋〗发动过的次数且至多为3），然后本轮你必须发动此技能。",
 
   ["@tg__langbu-round"] = "狼逋",
   ["#tg__siye"] = "你可发动“肆野”，摸 %arg 张牌，然后本轮你必须发动此技能",
   ["@@tg__siye-round"] = "肆野 必须发动",
+}
+
+local tg__sihan = General(extension, "tg__sihan", "wei", 4)
+
+local tg__tongzhen = fk.CreateTriggerSkill{
+  name = "tg__tongzhen",
+  anim_type = "offensive",
+  events = {fk.AfterCardsMove, fk.AfterDying, fk.Death, fk.Deathed, fk.GameStart},
+  can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(self.name, false, true) or player:prohibitUse(Fk:cloneCard("slash")) then return false end
+    local room = player.room
+    if event == fk.AfterCardsMove then
+      for _, move in ipairs(data) do
+        if move.from and move.from == player.id then
+          local to = room:getPlayerById(move.from)
+          if to:isKongcheng() and not to.dead and table.find(move.moveInfo, function (info)
+              return info.fromArea == Card.PlayerHand end) then
+            return true
+          end
+        end
+      end
+    elseif event == fk.AfterDying then
+      return target == player and not player.dead --似了也会有脱离濒死的时机触发
+    elseif event == fk.Death then
+      return target == player
+    else
+      if player:getMark("_tg__tongzhen_lonearmy") == 1 then return false end
+      local n = 0
+      if player.role == "lord" or player.role == "loyalist" then
+        n = #table.filter(room.alive_players, function(p) return p.role == "lord" or p.role == "loyalist" end)
+      elseif player.role == "rebel" then
+        n = #table.filter(room.alive_players, function(p) return p.role == "rebel" end)
+      elseif player.role == "renegade" then
+        n = #table.filter(room.alive_players, function(p) return p.role == "renegade" end)
+      end
+      return n == 1
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local card = Fk:cloneCard("slash")
+    local availableTargets = table.map(table.filter(room.alive_players, function(p) return p ~= player and not player:isProhibited(p, card) end), function(p) return p.id end)
+    if #availableTargets == 0 then return false end
+    local mark = type(player:getMark("@tg__tongzhen")) == "table" and player:getMark("@tg__tongzhen") or {}
+    local mark_name = {[fk.AfterCardsMove] = "tg__losehandcard", [fk.AfterDying] = "tg__afterdying", [fk.Deathed] = "tg__lonearmy", [fk.Death] = "tg__die", [fk.GameStart] = "tg__lonearmy"}
+    table.insertIfNeed(mark, mark_name[event])
+    local targets = room:askForChoosePlayers(player, availableTargets, 1, 99, "#tg__tongzhen-choose:::" .. #mark, self.name, true)
+    if #targets > 0 then
+      self.cost_data = targets
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.Deathed or event == fk.GameStart then
+      room:setPlayerMark(player, "_tg__tongzhen_lonearmy", 1)
+    end
+    local mark = type(player:getMark("@tg__tongzhen")) == "table" and player:getMark("@tg__tongzhen") or {}
+    local mark_name = {[fk.AfterCardsMove] = "tg__losehandcard", [fk.AfterDying] = "tg__afterdying", [fk.Deathed] = "tg__lonearmy", [fk.Death] = "tg__die", [fk.GameStart] = "tg__lonearmy"}
+    table.insertIfNeed(mark, mark_name[event])
+    room:setPlayerMark(player, "@tg__tongzhen", mark)
+    local slash = Fk:cloneCard("slash")
+    slash.skillName = self.name
+    local use = {
+      from = player.id,
+      tos = table.map(self.cost_data, function(pid) return {pid} end),
+      card = slash,
+      additionalDamage = #mark - 1,
+      extraUse = true,
+    }
+    room:useCard(use)
+  end,
+}
+
+tg__sihan:addSkill(tg__tongzhen)
+
+Fk:loadTranslationTable{ --tg__hanyinghanyaohanqionghanqi!
+  ["tg__sihan"] = "韩伵", --TG021 厉鬣衅龙 插画绘制：恶童 技能设计：突然消失 称号设计：？
+  ["tg__tongzhen"] = "恸阵",
+  [":tg__tongzhen"] = "当你{失去最后的手牌/脱离濒死/所属阵营变为仅剩一人/死亡}后，你可以视为使用一张无距离、次数和目标数限制的【杀】，此【杀】的伤害值基数为你触发过的〖恸阵〗条件数。<font color='grey'>其实叫“<b>韩瑛&韩瑶&韩琼&韩琪</b>”，名字太长……“伵”xù（@韩旭）",
+
+  ["#tg__tongzhen-choose"] = "恸阵：你可视为使用一张无距离、次数和目标数限制的【杀】，此【杀】的伤害值基数为 %arg",
+  ["@tg__tongzhen"] = "恸阵",
+  ["tg__losehandcard"] = "失",
+  ["tg__afterdying"] = "脱",
+  ["tg__lonearmy"] = "孤",
+  ["tg__die"] = "死",
 }
 
 local tg__caojie = General(extension, "tg__caojie", "qun", 3, 3, General.Female)
@@ -837,7 +924,7 @@ tg__caojie:addSkill(tg__weixi)
 tg__caojie:addSkill(tg__xuanhu)
 
 Fk:loadTranslationTable{
-  ["tg__caojie"] = "曹节", --TG 022 瑕玮终璧 插画绘制：特异型安妮 技能设计：紫髯的小乔 称号设计：？
+  ["tg__caojie"] = "曹节", --TG022 瑕玮终璧 插画绘制：特异型安妮 技能设计：紫髯的小乔 称号设计：？
   ["tg__weixi"] = "遗玺",
   [":tg__weixi"] = "限定技，当其他角色受到伤害后，若其因此不再是体力值唯一最大的角色，你可以与其各摸一张牌，然后本局游戏你与其摸牌阶段结束时，你与其各摸一张牌。",
   ["tg__xuanhu"] = "悬壶",
