@@ -493,6 +493,156 @@ Fk:loadTranslationTable{
   ["#tg__zhemou-slash"] = "折谋：视为使用无距离和目标数限制的【杀】",
 }
 
+local tg__shiji = General(extension, "tg__shiji", "wu", 4)
+
+local tg__danli = fk.CreateTriggerSkill{
+  name = "tg__danli",
+  events = {fk.EventPhaseStart},
+  anim_type = "drawcard",
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and player.phase < Player.NotActive and player.phase > Player.RoundStart and player:usedSkillTimes(self.name) < player:getLostHp()+1
+  end,
+  on_cost = function(self, event, target, player, data)
+    local phase_name_table = {
+      [2] = "phase_start",
+      [3] = "phase_judge",
+      [4] = "phase_draw",
+      [5] = "phase_play",
+      [6] = "phase_discard",
+      [7] = "phase_finish",
+    }
+    return player.room:askForSkillInvoke(player, self.name, data, "#tg__danli-ask:::" .. phase_name_table[player.phase])
+  end,
+  on_use = function(self, event, target, player, data)
+    player:drawCards(1, self.name)
+    local cid = player.room:askForCardChosen(player, player, "hej", self.name)
+    player.room:throwCard({cid}, self.name, player, player)
+  end,
+}
+
+local tg__bingji = fk.CreateTriggerSkill{
+  name = "tg__bingji",
+  anim_type = "offensive",
+  events = {fk.AfterCardsMove},
+  can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(self.name) then return false end
+    for _, move in ipairs(data) do
+      if move.from and move.from == player.id then
+        if not player.dead then
+          if #player:getCardIds(Player.Judge) == 0 and table.find(move.moveInfo, function (info)
+              return info.fromArea == Card.PlayerJudge end) then
+            return true
+          end
+          if #player:getCardIds(Player.Equip) == 0 and table.find(move.moveInfo, function (info)
+              return info.fromArea == Card.PlayerEquip end) then
+            return true
+          end
+          if player.phase == Player.Discard and table.find(move.moveInfo, function (info)
+              return Fk:getCardById(info.cardId).type == Card.TypeBasic end) then
+            return true
+          end
+        end
+      end
+    end
+  end,
+  on_trigger = function(self, event, target, player, data)
+    local room = player.room
+    local events = {}
+    for _, move in ipairs(data) do
+      if move.from and move.from == player.id then
+        if #player:getCardIds(Player.Judge) == 0 and table.find(move.moveInfo, function (info)
+            return info.fromArea == Card.PlayerJudge end) then
+          table.insert(events, 1)
+        end
+        if #player:getCardIds(Player.Equip) == 0 and table.find(move.moveInfo, function (info)
+            return info.fromArea == Card.PlayerEquip end) then
+          table.insert(events, 2)
+        end
+        if player.phase == Player.Discard and table.find(move.moveInfo, function (info)
+            return Fk:getCardById(info.cardId).type == Card.TypeBasic end) then
+          table.insert(events, 3)
+        end
+      end
+    end
+    local mark = type(player:getMark("_tg__bingji")) == "table" and player:getMark("_tg__bingji") or { {}, {}, {} }
+    for _, e in ipairs(events) do
+      if not player:hasSkill(self.name) or player.dead then break end
+      if table.find(room.alive_players, function(p) return not table.contains(mark[e], p.id) end) then
+        if e == 3 then
+          local card = Fk:cloneCard("slash")
+          if player:prohibitUse(card) then return false end
+          if not table.find(room.alive_players, function(p) return p ~= player and not player:isProhibited(p, card) end) then
+            return false
+          end
+        end
+        self:doCost(event, target, player, e)
+      end
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local mark = type(player:getMark("_tg__bingji")) == "table" and player:getMark("_tg__bingji") or { {}, {}, {} }
+    local availableTargets = table.map(table.filter(room.alive_players, function(p) return not table.contains(mark[data], p.id) end), function(p) return p.id end)
+    if #availableTargets == 0 then return false end
+    if data == 3 then
+      local card = Fk:cloneCard("slash")
+      if player:prohibitUse(card) then return false end
+      availableTargets = table.filter(availableTargets, function(pid) return pid ~= player.id and not player:isProhibited(room:getPlayerById(pid), card) end)
+      if #availableTargets == 0 then return false end
+    end
+    local targets = room:askForChoosePlayers(player, availableTargets, 1, 1, "#tg__bingji_" .. tostring(data), self.name, true)
+    if #targets > 0 then
+      self.cost_data = targets[1]
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local mark = type(player:getMark("_tg__bingji")) == "table" and player:getMark("_tg__bingji") or { {}, {}, {} }
+    local target = self.cost_data
+    table.insert(mark[data], target)
+    player:setMark("_tg__bingji", mark)
+    if data == 3 then
+      local slash = Fk:cloneCard("slash")
+      slash.skillName = self.name
+      local use = {
+        from = player.id,
+        tos = { {target} },
+        card = slash,
+      }
+      room:useCard(use)
+    elseif data == 1 then
+      room:damage{
+        from = player,
+        to = room:getPlayerById(target),
+        damage = 1,
+        skillName = self.name,
+      }
+    else
+      local cids = room:getCardsFromPileByRule("slash,duel,analeptic")
+      if #cids > 0 then
+        room:obtainCard(target, cids[1], false, fk.ReasonPrey)
+      end
+    end
+  end,
+}
+
+tg__shiji:addSkill(tg__danli)
+tg__shiji:addSkill(tg__bingji)
+
+Fk:loadTranslationTable{
+  ["tg__shiji"] = "施绩", --TG011 戍国之垒 插画绘制：蒋斯成 技能设计：竹沐雨 称号设计：恶童
+  ["tg__danli"] = "胆力",
+  [":tg__danli"] = "每回合限X次（X为你已损失的体力值+1），你的每个阶段开始时，你可以摸一张牌并弃置区域内的一张牌。",
+  ["tg__bingji"] = "并击",
+  [":tg__bingji"] = "每项对每名角色限一次：1. 当你失去判定区内的最后一张牌后，你可以对一名角色造成1点伤害；2. 当你失去装备区内的最后一张牌后，你可以令一名角色从牌堆获得一张【杀】、【决斗】或【酒】；3. 当你于弃牌阶段失去基本牌后，你可以视为对一名角色使用一张【杀】。",--2. ……，你可以令一名角色的所有图国牌视为【武备·临锋决敌】直到你下回合开始
+
+  ["#tg__danli-ask"] = "胆力：此时为 %arg 开始时，你可摸一张牌并弃置区域内的一张牌",
+  ["#tg__bingji_3"] = "并击：你可视为对一名角色使用一张【杀】",
+  ["#tg__bingji_1"] = "并击：你可对一名角色造成1点伤害",
+  ["#tg__bingji_2"] = "并击：你可令一名角色从牌堆获得一张【杀】、【决斗】或【酒】",
+}
+
 local tg__sunjiao = General(extension, "tg__sunjiao", "wu", 4)
 
 local tg__jueyu = fk.CreateTriggerSkill{
@@ -707,13 +857,68 @@ tg__yangfenghanxian:addSkill(tg__siye)
 Fk:loadTranslationTable{
   ["tg__yangfenghanxian"] = "杨奉韩暹", --TG013 构辰鸱张 插画绘制：Aimer彩三 技能设计&称号设计：会乱武的袁绍
   ["tg__langbu"] = "狼逋",
-  [":tg__langbu"] = "锁定技，当你摸牌时，你视为使用一张【违害就利】；你使用【违害就利】观看牌数-X（X为本轮〖狼逋〗已发动次数且至多为3），若已减至0，此牌的效果改为令你失去1点体力或减1点体力上限。<br/><font color='grey'>【违害就利】锦囊牌 你从牌堆摸牌或进行判定时，对你使用。目标角色观看牌堆顶的三张牌，然后将其中任意张牌置于弃牌堆。",
+  [":tg__langbu"] = "锁定技，当你摸牌时，你视为使用一张【违害就利】；你使用【违害就利】观看牌数-X（X为本轮〖狼逋〗已发动次数且至多为3），若已减至0，此牌的效果改为令你失去1点体力或减1点体力上限。<br/><font color='grey'>【<b>违害就利</b>】锦囊牌 你从牌堆摸牌或进行判定时，对你使用。目标角色观看牌堆顶的三张牌，然后将其中任意张牌置于弃牌堆。",
   ["tg__siye"] = "肆野",
   [":tg__siye"] = "当主公受到【杀】的伤害后，你可以摸X+1张牌（X为本轮〖狼逋〗发动过的次数且至多为3），然后本轮你必须发动此技能。",
 
   ["@tg__langbu-round"] = "狼逋",
   ["#tg__siye"] = "你可发动“肆野”，摸 %arg 张牌，然后本轮你必须发动此技能",
   ["@@tg__siye-round"] = "肆野 必须发动",
+}
+
+local tg__shixie = General(extension, "tg__shixie", "qun", 3)
+
+local tg__jueyuk = fk.CreateDistanceSkill{
+  name = "tg__jueyuk",
+  correct_func = function(self, from, to)
+    if to:hasSkill(self.name) and from:getHandcardNum() > to:getHandcardNum() then
+      return 1
+    end
+  end,
+}
+
+local tg__bode = fk.CreateActiveSkill{
+  name = "tg__bode",
+  anim_type = "drawcard",
+  can_use = function (self, player, card)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  card_num = 0,
+  target_num = 0,
+  card_filter = function() return false end,
+  on_use = function (self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local num = #table.filter(room.alive_players, function(p) return not p:inMyAttackRange(player) end)
+    if num == 0 then return false end
+    local cids = room:getNCards(num)
+    room:moveCardTo(cids, Card.Processing, nil, fk.ReasonJustMove, self.name)
+    room:delay(2000)
+    local targets = table.map(table.filter(room.alive_players, function(p) return not player:inMyAttackRange(p) and p ~= player end), function(p) return p.id end)
+    if #targets > 0 then
+      local cards = table.filter(cids, function(id) return Fk:getCardById(id).type == Card.TypeTrick end)
+      if #cards > 0 then
+        local target = room:askForChoosePlayers(player, targets, 1, 1, "#tg__bode-ask", self.name, false)[1]
+        room:moveCardTo(cards, Player.Hand, room:getPlayerById(target), fk.ReasonGive, self.name, nil, false)
+        table.forEach(cards, function(id) table.removeOne(cids, id) end)
+      end
+    end
+    local dummy = Fk:cloneCard("jink")
+    dummy:addSubcards(cids)
+    room:obtainCard(player, dummy, true, fk.ReasonPrey)
+  end
+}
+
+tg__shixie:addSkill(tg__jueyuk)
+tg__shixie:addSkill(tg__bode)
+
+Fk:loadTranslationTable{
+  ["tg__shixie"] = "士燮", --TG019 百越归仁 插画绘制：彩三&特异型安妮 技能设计：羌溪散人 称号设计：？
+  ["tg__jueyuk"] = "绝域",
+  [":tg__jueyuk"] = "锁定技，手牌多于你的角色至你距离+1。",
+  ["tg__bode"] = "播德",
+  [":tg__bode"] = "出牌阶段限一次，你可以展示牌堆顶的X张牌（X为攻击范围内没有你的角色数），你将其中的锦囊牌交给一名攻击范围外的其他角色，获得未交出的牌。",
+
+  ["#tg__bode-ask"] = "播德：将其中的锦囊牌交给一名攻击范围外的其他角色，你获得其余牌",
 }
 
 local tg__sihan = General(extension, "tg__sihan", "wei", 4)
@@ -728,8 +933,7 @@ local tg__tongzhen = fk.CreateTriggerSkill{
     if event == fk.AfterCardsMove then
       for _, move in ipairs(data) do
         if move.from and move.from == player.id then
-          local to = room:getPlayerById(move.from)
-          if to:isKongcheng() and not to.dead and table.find(move.moveInfo, function (info)
+          if player:isKongcheng() and not player.dead and table.find(move.moveInfo, function (info)
               return info.fromArea == Card.PlayerHand end) then
             return true
           end
