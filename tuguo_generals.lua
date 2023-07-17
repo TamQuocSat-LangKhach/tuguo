@@ -621,11 +621,19 @@ local tg__bingji = fk.CreateTriggerSkill{
     else
       local cids = room:getCardsFromPileByRule("slash,duel,analeptic")
       if #cids > 0 then
+        room:setCardMark(Fk:getCardById(cids[1]), "@@tg__bingji-inhand", 1)
         room:obtainCard(target, cids[1], false, fk.ReasonPrey)
       end
     end
   end,
 }
+local tg__bingji_maxcards = fk.CreateMaxCardsSkill{
+  name = "#tg__bingji_maxcards",
+  exclude_from = function(self, player, card)
+    return card:getMark("@@tg__bingji-inhand") > 0
+  end,
+}
+tg__bingji:addRelatedSkill(tg__bingji_maxcards)
 
 tg__shiji:addSkill(tg__danli)
 tg__shiji:addSkill(tg__bingji)
@@ -635,12 +643,13 @@ Fk:loadTranslationTable{
   ["tg__danli"] = "胆力",
   [":tg__danli"] = "每回合限X次（X为你已损失的体力值+1），你的每个阶段开始时，你可以摸一张牌并弃置区域内的一张牌。",
   ["tg__bingji"] = "并击",
-  [":tg__bingji"] = "每项对每名角色限一次：1. 当你失去判定区内的最后一张牌后，你可以对一名角色造成1点伤害；2. 当你失去装备区内的最后一张牌后，你可以令一名角色从牌堆获得一张【杀】、【决斗】或【酒】；3. 当你于弃牌阶段失去基本牌后，你可以视为对一名角色使用一张【杀】。",--2. ……，你可以令一名角色的所有图国牌视为【武备·临锋决敌】直到你下回合开始
+  [":tg__bingji"] = "每项对每名角色限一次：1. 当你失去判定区内的最后一张牌后，你可以对一名角色造成1点伤害；2. 当你失去装备区内的最后一张牌后，你可以令一名角色从牌堆获得一张不计入手牌上限的【杀】、【决斗】或【酒】；3. 当你于弃牌阶段失去基本牌后，你可以视为对一名角色使用一张【杀】。",--2. ……，你可以令一名角色的所有图国牌视为【武备·临锋决敌】直到你下回合开始
 
   ["#tg__danli-ask"] = "胆力：此时为 %arg 开始时，你可摸一张牌并弃置区域内的一张牌",
   ["#tg__bingji_3"] = "并击：你可视为对一名角色使用一张【杀】",
   ["#tg__bingji_1"] = "并击：你可对一名角色造成1点伤害",
   ["#tg__bingji_2"] = "并击：你可令一名角色从牌堆获得一张【杀】、【决斗】或【酒】",
+  ["@@tg__bingji-inhand"] = "并击",
 }
 
 local tg__sunjiao = General(extension, "tg__sunjiao", "wu", 4)
