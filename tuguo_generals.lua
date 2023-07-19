@@ -184,6 +184,182 @@ Fk:loadTranslationTable{
   ["#tg__rangtu_negative"] = "攘途",
 }
 
+local tg__liaoli = General(extension, "tg__liaoli", "shu", 3)
+
+local tg__fenlun = fk.CreateTriggerSkill{
+  name = "tg__fenlun",
+  events = {fk.EventPhaseChanging},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self.name) and data.to == Player.NotActive and target ~= player and not player:isKongcheng() and not target:isKongcheng()
+  end,
+  on_cost = function(self, event, target, player, data)
+    return player.room:askForSkillInvoke(player, self.name, data, "#tg__fenlun-invoke:"..target.id)
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local to = target
+    while true do
+      room:addPlayerMark(to, "_tg__fenlun", 1)
+      local pd = player:pindian({to}, self.name)
+      if pd.results[to.id].winner == player then
+        local filterdEvents = room.logic:getEventsOfScope(GameEvent.UseCard, 998, function(e) 
+          local use = e.data[1]
+          return use.from == room.current.id and (use.card.type == Card.TypeBasic or use.card:isCommonTrick())
+        end, Player.HistoryTurn)
+        if #filterdEvents == 0 then break end
+        local cards = {}
+        table.forEach(filterdEvents, function(e)
+          table.insertIfNeed(cards, e.data[1].card.name)
+        end)
+        room:setPlayerMark(player, "_tg__fenlun_cards", cards)
+        local success, dat = room:askForUseViewAsSkill(player, "tg__fenlun_vs", "#tg__fenlun-vs:" .. target.id, true)
+        if success then
+          local card = Fk.skills["tg__fenlun_vs"]:viewAs(dat.cards)
+          local use = { ---@type CardUseStruct
+            from = player.id,
+            tos = table.map(dat.targets, function(e) return {e} end),
+            card = card,
+          }
+          room:useCard(use)
+        end
+        room:setPlayerMark(player, "_tg__fenlun_cards", 0)
+        break
+      else
+        if player:isKongcheng() then break end
+        local availableTargets = table.map(table.filter(room.alive_players, function(p) return p ~= player and not p:isKongcheng() and p:getMark("_tg__fenlun") == 0 end), function(p) return p.id end)
+        if #availableTargets == 0 then break end
+        local targets = room:askForChoosePlayers(player, availableTargets, 1, 1, "#tg__fenlun-again", self.name, true)
+        if #targets == 0 then break end
+        to = room:getPlayerById(targets[1])
+        room:doIndicate(player.id, {to.id})
+        room:notifySkillInvoked(player, self.name)
+      end
+    end
+    table.forEach(room.alive_players, function(p) room:setPlayerMark(p, "_tg__fenlun", 0) end)
+  end,
+}
+local tg__fenlun_vs = fk.CreateViewAsSkill{
+  name = "tg__fenlun_vs",
+  card_filter = function(self, card) return false end,
+  card_num = 0,
+  interaction = function(self)
+    local allCardNames = {}
+    for _, name in ipairs(Self:getMark("_tg__fenlun_cards")) do
+      local card = Fk:cloneCard(name)
+      card.skillName = self.name
+      if not Self:prohibitUse(card) and card.skill:canUse(Self) then
+        table.insertIfNeed(allCardNames, name)
+      end
+    end
+    return UI.ComboBox { choices = allCardNames, all_choices = Self:getMark("_tg__fenlun_cards") }
+  end,
+  view_as = function(self, cards)
+    local choice = self.interaction.data
+    if not choice then return end
+    local c = Fk:cloneCard(choice)
+    c.skillName = self.name
+    return c
+  end,
+  enabled_at_play = function(self, player)
+    return false
+  end,
+  enabled_at_response = function(self, player)
+    return false
+  end,
+}
+Fk:addSkill(tg__fenlun_vs)
+
+local tg__qihcai = fk.CreateTriggerSkill{
+  name = "tg__qihcai",
+  anim_type = "drawcard",
+  events = {fk.AfterCardsMove, fk.PindianResultConfirmed},
+  can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(self.name) or player:usedSkillTimes(self.name, Player.HistoryRound) > 0 then return false end
+    if event == fk.AfterCardsMove then
+      for _, move in ipairs(data) do
+        if move.from and move.from == player.id then
+          if player:isKongcheng() and not player.dead and table.find(move.moveInfo, function (info)
+              return info.fromArea == Card.PlayerHand end) then
+            return true
+          end
+        end
+      end
+    else
+      return (data.from == player or table.contains(data.tos, player)) and data.winner ~= player
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    local events = player.room.logic:getEventsOfScope(GameEvent.Pindian, 998, function(e) 
+      local pd = e.data[1]
+      return pd.from == player or table.contains(pd.tos, player)
+    end, Player.HistoryRound)
+    local num = 0
+    for _, e in ipairs(events) do
+      local pd = e.data[1]
+      for _, result in pairs(pd.results) do
+        if result.winner ~= player then
+          num = num + 1
+        end
+      end
+    end
+    if event == fk.AfterCardsMove then num = num - 1 end
+    if player.room:askForSkillInvoke(player, self.name, data, "#tg__qihcai-ask:::"..num) then
+      self.cost_data = num
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local num = self.cost_data
+    local room = player.room
+    player:drawCards(num, self.name)
+    room:setPlayerMark(player, "@tg__qihcai", "-" .. tostring(num))
+  end,
+
+  refresh_events = {fk.EventPhaseChanging, fk.Death},
+  can_refresh = function(self, event, target, player, data)
+    return target == player and player:getMark("@tg__qihcai") ~= 0 and (event == fk.Death or data.from == Player.NotActive)
+  end,
+  on_refresh = function(self, event, target, player, data)
+    player.room:setPlayerMark(player, "@tg__qihcai", 0)
+  end,
+}
+local tg__qihcai_minus = fk.CreateTriggerSkill{
+  name = "#tg__qihcai_minus",
+  anim_type = "negative",
+  events = {fk.PindianCardsDisplayed},
+  frequency = Skill.Compulsory,
+  can_trigger = function(self, event, target, player, data)
+    return player:getMark("@@tg__qihcai") > 0 and (data.from == player or table.contains(data.tos, player))
+  end,
+  on_use = function(self, event, target, player, data)
+    local num = tonumber(player:getMark("@tg__qihcai"))
+    if data.from == player then
+      data.fromCard.number = math.max(data.fromCard.number + num, 1)
+    else
+      data.results[player.id].toCard.number = math.max(data.results[player.id].toCard.number + num, 1)
+    end
+  end,
+}
+tg__qihcai:addRelatedSkill(tg__qihcai_minus)
+
+tg__liaoli:addSkill(tg__fenlun)
+tg__liaoli:addSkill(tg__qihcai)
+
+Fk:loadTranslationTable{
+  ["tg__liaoli"] = "廖立", --TG006 䯄足难踏 插画绘制：周千策 技能设计：理亚&竹沐雨 称号设计：圣帝
+  ["tg__fenlun"] = "忿论",
+  [":tg__fenlun"] = "其他角色的回合结束时，你可以与其拼点：若你赢，你可以视为使用一张当前回合角色此回合使用过的基本或普通锦囊牌；若你没赢，你可以与此次发动技能未选择过的一名角色重复此流程。", --你可以视为使用一张该角色本回合使用过且被其他角色响应过的牌
+  ["tg__qihcai"] = "弃才",
+  [":tg__qihcai"] = "每轮限一次，你的回合外，当你失去最后的手牌后或拼点没赢时，你可以摸X张牌，然后直到你下回合开始，你的拼点牌的点数-X（X为你本轮拼点没赢的次数）。",
+
+  ["#tg__fenlun-invoke"] = "忿论：你可与 %src 拼点",
+  ["#tg__fenlun-again"] = "忿论：你可与一名角色拼点",
+  ["tg__fenlun_vs"] = "忿论",
+  ["#tg__fenlun-vs"] = "忿论：你可视为使用一张 %src 此回合使用过的基本或普通锦囊牌",
+  ["#tg__qihcai-ask"] = "弃才：你可摸 %arg 张牌，直到你下回合开始，你的拼点牌的点数-X",
+  ["@tg__qihcai"] = "弃才拼点",
+}
+
 local tg__luoxian = General(extension, "tg__luoxian", "shu", 4)
 
 local tg__jiancheng = fk.CreateViewAsSkill{

@@ -175,6 +175,7 @@ local defeatingTheDouble = fk.CreateTrickCard{
   suit = Card.Club,
   number = 3,
   skill = defeatingTheDoubleSkill,
+  is_damage_card = true,
 }
 extension:addCards{
   defeatingTheDouble,
