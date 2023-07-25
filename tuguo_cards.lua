@@ -79,30 +79,9 @@ local avoidingDisadvantagesSkill = fk.CreateActiveSkill{
         room:gameOver("")
       end
     end
-    local card_ids = table.slice(room.draw_pile, 1, num + 1)
-    local get = {}
-    room:fillAG(player, card_ids)
-    room:delay(3000)
-    room:closeAG(player)
-    local choices = {"AD1", "AD2", "AD3"}
-    choices = table.slice(choices, 1, num + 1)
-    table.insert(choices, "Cancel")
-    local choice = room:askForChoice(player, choices, self.name, "#AD-ask")
-    if choice == "Cancel" then return false end
-    local n = table.indexOf(choices, choice)
-    if #card_ids == n then
-      get = card_ids
-    else
-      while #get < n do
-        room:fillAG(player, card_ids)
-        local card_id = room:askForAG(player, card_ids, false, self.name)
-        room:takeAG(player, card_id)
-        table.insert(get, card_id)
-        table.removeOne(card_ids, card_id)
-        room:closeAG(player)
-      end
-    end
-    room:moveCardTo(get, Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name)
+    local cids = table.slice(room.draw_pile, 1, num + 1)
+    local ret = room:askForGuanxing(player, cids, nil, nil, self.name, true, { "Top", "pile_discard" }).bottom
+    room:moveCardTo(ret, Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name)
   end
 }
 local avoidingDisadvantages = fk.CreateTrickCard{
@@ -124,10 +103,6 @@ Fk:loadTranslationTable{
   ["#AD-draw"] = "你即将摸%arg张牌，可使用【违害就利】，观看牌堆顶%arg2张牌，将其中任意张牌置于弃牌堆",
   ["#AD-negative"] = "你可使用【违害就利】，选择失去1点体力或减1点体力上限",
   ["avoiding_disadvantages_skill"] = "违害就利",
-  ["#AD-ask"] = "违害就利：选择将其中任意张牌置于弃牌堆",
-  ["AD1"] = "将其中一张牌置于弃牌堆",
-  ["AD2"] = "将其中两张牌置于弃牌堆",
-  ["AD3"] = "将其中三张牌置于弃牌堆",
 }
 
 local defeating_the_double_active = fk.CreateActiveSkill{
