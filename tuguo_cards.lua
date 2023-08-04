@@ -15,7 +15,7 @@ local avoidingDisadvantagesTrigger = fk.CreateTriggerSkill{
     if event == fk.BeforeDrawCard and data.num < 1 then return false end
     for _, id in ipairs(player:getCardIds(Player.Hand)) do
       local card = Fk:getCardById(id)
-      if card.name == "avoiding_disadvantages" and not player:prohibitUse(card) and not player:isProhibited(player, card) then
+      if card and card.name == "avoiding_disadvantages" and not player:prohibitUse(card) and not player:isProhibited(player, card) then
         return true
       end
     end
