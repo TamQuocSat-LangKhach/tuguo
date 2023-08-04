@@ -324,7 +324,8 @@ local tg__jianlian = fk.CreateActiveSkill{
   card_num = 1,
   target_num = 1,
   card_filter = function(self, to_select, player)
-    return Fk:getCardById(to_select).color == Card.Black
+    local card = Fk:getCardById(to_select) --?
+    return card and card.color == Card.Black
   end,
   target_filter = function(self, to_select, selected)
     return #selected == 0 and to_select ~= Self.id
