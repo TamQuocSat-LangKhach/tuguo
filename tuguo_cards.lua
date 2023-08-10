@@ -141,6 +141,8 @@ local defeatingTheDoubleSkill = fk.CreateActiveSkill{
         to = target,
         damage = 1,
         skillName = self.name,
+        card = cardEffectEvent.card,
+        damageType = fk.NormalDamage,
       }
     end
   end

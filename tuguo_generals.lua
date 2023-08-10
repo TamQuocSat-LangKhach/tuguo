@@ -1457,7 +1457,7 @@ local tg__tongzhen = fk.CreateTriggerSkill{
     else
       if player:getMark("_tg__tongzhen_lonearmy") == 1 then return false end
       local n = 0
-      if player.role == "lord" or player.role == "loyalist" then
+      if player.role == "lord" or player.role == "loyalist" then --不行的
         n = #table.filter(room.alive_players, function(p) return p.role == "lord" or p.role == "loyalist" end)
       elseif player.role == "rebel" then
         n = #table.filter(room.alive_players, function(p) return p.role == "rebel" end)
