@@ -562,7 +562,7 @@ local tg__fenlun_vs = fk.CreateViewAsSkill{
     for _, name in ipairs(Self:getMark("_tg__fenlun_cards")) do
       local card = Fk:cloneCard(name)
       card.skillName = self.name
-      if not Self:prohibitUse(card) and card.skill:canUse(Self) then
+      if not Self:prohibitUse(card) and Self:canUse(card) then
         table.insertIfNeed(allCardNames, name)
       end
     end
@@ -686,7 +686,7 @@ local tg__jiancheng = fk.CreateViewAsSkill{
     local allCardNames = {}
     for _, id in ipairs(Fk:getAllCardIds()) do
       local card = Fk:getCardById(id)
-      if not table.contains(allCardNames, card.name) and card.type == Card.TypeBasic and not card.is_derived and ((Fk.currentResponsePattern == nil and card.skill:canUse(Self)) or (Fk.currentResponsePattern and Exppattern:Parse(Fk.currentResponsePattern):match(card))) and not Self:prohibitUse(card) then
+      if not table.contains(allCardNames, card.name) and card.type == Card.TypeBasic and not card.is_derived and ((Fk.currentResponsePattern == nil and Self:canUse(card)) or (Fk.currentResponsePattern and Exppattern:Parse(Fk.currentResponsePattern):match(card))) and not Self:prohibitUse(card) then
         table.insert(allCardNames, card.name)
       end
     end
