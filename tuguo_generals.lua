@@ -367,41 +367,30 @@ local tg__wanzu = fk.CreateTriggerSkill{
   anim_type = "special",
   can_trigger = function(self, event, target, player, data)
     if not player:hasSkill(self.name) or data.to ~= Player.NotActive then return false end
-    local events = player.room.logic:getEventsOfScope(GameEvent.MoveCards, 999, function(e)
+    player.room.logic:getEventsOfScope(GameEvent.MoveCards, 999, function(e)
       local move = e.data[1]
-      return move.toArea == Card.PlayerHand and move.from == player.id and move.to and player.room:getPlayerById(move.to) and move.to ~= player.id
-    end, Player.HistoryTurn)
-    if #events == 0 then return false end
-    for _, e in ipairs(events) do
-      --[[
-        local move = e.data[1] --FIXME
-      for _, info in ipairs(move.moveInfo) do
-        if info.fromArea == Card.PlayerHand or info.fromArea == Card.PlayerEquip then
-          return true
+      if move.toArea == Card.PlayerHand and move.from == player.id and move.to and player.room:getPlayerById(move.to) and move.to ~= player.id then
+        for _, info in ipairs(move.moveInfo) do
+          if info.fromArea == Card.PlayerHand or info.fromArea == Card.PlayerEquip then
+            return true
+          end
         end
       end
-      --]]
-      return true
-    end
+    end, Player.HistoryTurn)
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
     local targets = {}
-    local events = room.logic:getEventsOfScope(GameEvent.MoveCards, 999, function(e)
+    room.logic:getEventsOfScope(GameEvent.MoveCards, 999, function(e)
       local move = e.data[1]
-      return move.toArea == Card.PlayerHand and move.from == player.id and move.to and room:getPlayerById(move.to) and move.to ~= player.id
-    end, Player.HistoryTurn)
-    for _, e in ipairs(events) do
-      local move = e.data[1]
-      --[[
-      for _, info in ipairs(move.moveInfo) do
-        if info.fromArea == Card.PlayerHand or info.fromArea == Card.PlayerEquip then
-          table.insertIfNeed(targets, move.to)
+      if move.toArea == Card.PlayerHand and move.from == player.id and move.to and room:getPlayerById(move.to) and move.to ~= player.id then
+        for _, info in ipairs(move.moveInfo) do
+          if info.fromArea == Card.PlayerHand or info.fromArea == Card.PlayerEquip then
+            table.insertIfNeed(targets, move.to)
+          end
         end
       end
-      --]]
-      table.insertIfNeed(targets, move.to)
-    end
+    end, Player.HistoryTurn)
     local target = room:askForChoosePlayers(player, targets, 1, 1, "#tg__wanzu-target", self.name, true)
     if #target > 0 then
       target = target[1]
