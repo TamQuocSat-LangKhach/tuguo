@@ -1366,6 +1366,106 @@ Fk:loadTranslationTable{
   ["@@tg__siye-round"] = "肆野 必须发动",
 }
 
+local tg__dengzhong = General(extension, "tg__dengzhong", "wei", 4)
+
+local tg__xiannan = fk.CreateTriggerSkill{
+  name = "tg__xiannan",
+  anim_type = "drawcard",
+  events = {fk.AfterCardsMove},
+  can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(self.name) then return false end
+    local num = 0
+    local ret = true
+    local room = player.room
+    room.logic:getEventsOfScope(GameEvent.MoveCards, 1, function (e)
+      if num >= 1 then ret = false end
+      if num >= player.maxHp then
+        ret = false
+        return true
+      end
+      for _, move in ipairs(e.data) do
+        if move.from == player.id then
+          for _, info in ipairs(move.moveInfo) do
+            if info.fromArea == Card.PlayerHand or info.fromArea == Card.PlayerEquip then
+              num = num + 1
+              if num >= player.maxHp then ret = true end
+            end
+          end
+        end
+      end
+    end, Player.HistoryRound)
+    return (num >= 1 or num >= player.maxHp) and ret
+  end,
+  on_use = function(self, event, target, player, data)
+    player:drawCards(1, self.name)
+    player.room:addPlayerMark(player, "@tg__xiannian-turn", 1)
+  end,
+}
+local tg__xiannan_trig = fk.CreateTriggerSkill{
+  name = "#tg__xiannan_trig",
+  events = {fk.DamageInflicted, fk.DamageCaused},
+  frequency = Skill.Compulsory,
+  mute = true,
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:getMark("@tg__xiannian-turn") > 0
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:notifySkillInvoked(player, "tg__xiannan", event == fk.DamageCaused and "offensive" or "negative")
+    data.damage = data.damage + player:getMark("@tg__xiannian-turn")
+    room:setPlayerMark(player, "@tg__xiannian-turn", 0)
+  end,
+}
+tg__xiannan:addRelatedSkill(tg__xiannan_trig)
+
+local tg__shuanggu = fk.CreateTriggerSkill{
+  name = "tg__shuanggu",
+  anim_type = "defensive",
+  events = {fk.DamageInflicted},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self.name) and player:inMyAttackRange(target) and data.damage >= target.hp
+  end,
+  on_cost = function(self, event, target, player, data)
+    return player.room:askForSkillInvoke(player, self.name, data, "#tg__shuanggu-ask::" .. target.id)
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:changeMaxHp(player, -1)
+    if not (player.dead or target.dead) then
+      room:setPlayerMark(player, "@@tg__shuanggu-turn", 1)
+      room:setPlayerMark(target, "@@tg__shuanggu-turn", 1)
+    end
+  end,
+}
+local tg__shuanggu_trig = fk.CreateTriggerSkill{
+  name = "#tg__shuanggu_trig",
+  events = {fk.DamageInflicted},
+  mute = true,
+  frequency = Skill.Compulsory,
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:getMark("@@tg__shuanggu-turn") > 0
+  end,
+  on_use = Util.TrueFunc,
+}
+tg__shuanggu:addRelatedSkill(tg__shuanggu_trig)
+
+tg__dengzhong:addSkill(tg__xiannan)
+tg__dengzhong:addSkill(tg__shuanggu)
+
+Fk:loadTranslationTable{
+  ["tg__dengzhong"] = "邓忠", -- TG018 蹈覆奋旋 插画绘制：恶童 技能设计：紫髯的小乔 称号设计：？
+  ["tg__xiannan"] = "陷难",
+  [":tg__xiannan"] = "当你于一轮内失去第一张牌或第X张牌后（X为你的体力上限），你可摸一张牌，令你于此回合下一次造成或受到的伤害+1。",
+  ["tg__shuanggu"] = "霜骨",
+  [":tg__shuanggu"] = "当你攻击范围内的角色受到致命伤害时，你可减1点体力上限，此回合防止你与其受到的伤害。",
+
+  ["@tg__xiannian-turn"] = "陷难 加伤",
+  ["#tg__xiannan_trig"] = "陷难",
+  ["#tg__shuanggu-ask"] = "霜骨：你可减1点体力上限，防止本回合你与 %dest 受到的伤害",
+  ["@@tg__shuanggu-turn"] = "霜骨 防伤",
+  ["#tg__shuanggu_trig"] = "霜骨",
+}
+
 local tg__shixie = General(extension, "tg__shixie", "qun", 3)
 
 local tg__jueyuk = fk.CreateDistanceSkill{

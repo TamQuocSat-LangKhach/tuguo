@@ -22,7 +22,7 @@ local avoidingDisadvantagesTrigger = fk.CreateTriggerSkill{
   end,
   on_cost = function(self, event, target, player, data)
     local num = 3
-    if player:hasSkill("tg__langbu") then --开耦！
+    if player:hasSkill("tg__langbu") then -- 开耦！
       num = num - player:getMark("@tg__langbu-round")
     end
     local prompt
@@ -41,7 +41,7 @@ local avoidingDisadvantagesTrigger = fk.CreateTriggerSkill{
     local room = player.room
     room:useCard(self.cost_data)
     if player.dead and event == fk.BeforeDrawCard then
-      data.num = 0 --没用
+      data.num = 0
     end
   end,
 }
@@ -59,7 +59,7 @@ local avoidingDisadvantagesSkill = fk.CreateActiveSkill{
   on_effect = function(self, room, cardEffectEvent)
     local player = room:getPlayerById(cardEffectEvent.to)
     local num = 3
-    if player:hasSkill("tg__langbu") then --开耦！
+    if player:hasSkill("tg__langbu") then -- 开耦！
       num = num - player:getMark("@tg__langbu-round")
       if num < 1 then
         local chs = {"loseMaxHp"}
@@ -80,8 +80,14 @@ local avoidingDisadvantagesSkill = fk.CreateActiveSkill{
       end
     end
     local cids = table.slice(room.draw_pile, 1, num + 1)
-    local ret = room:askForGuanxing(player, cids, nil, nil, self.name, true, { "Top", "pile_discard" }).bottom
-    room:moveCardTo(ret, Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name)
+    -- local ret = room:askForGuanxing(player, cids, nil, nil, self.name, true, { "Top", "pile_discard" }).bottom
+    local to_discard = room:askForCardsChosen(player, player, 0, #cids, {
+      card_data = {
+        { "Top", cids }
+      }
+      -- 有prompt就好了
+    }, self.name)
+    room:moveCardTo(to_discard, Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name)
   end
 }
 local avoidingDisadvantages = fk.CreateTrickCard{
@@ -95,7 +101,7 @@ extension:addCards{
   avoidingDisadvantages:clone(Card.Diamond, 1),
 }
 Fk:loadTranslationTable{
-  ["avoiding_disadvantages"] = "违害就利", --seeking_advantages_and_avoiding_disadvantages
+  ["avoiding_disadvantages"] = "违害就利", -- seeking_advantages_and_avoiding_disadvantages
   [":avoiding_disadvantages"] = "锦囊牌<br /><b>时机</b>：当你摸牌或进行判定时<br /><b>目标</b>：你<br /><b>效果</b>：目标角色观看牌堆顶三张牌，然后将其中任意张牌置于弃牌堆。",
 
   ["avoiding_disadvantages_trigger"] = "违害就利",
