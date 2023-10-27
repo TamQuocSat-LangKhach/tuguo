@@ -22,7 +22,7 @@ local tg__kaiji = fk.CreateActiveSkill{
   target_num = 0,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
-    room:broadcastSkillInvoke("ty__kaiji")
+    player:broadcastSkillInvoke("ty__kaiji")
     if player:getSwitchSkillState(self.name, true) == fk.SwitchYang then
       room:notifySkillInvoked(player, self.name, "drawcard")
       local num = player:getMaxCards() - player:getHandcardNum()
@@ -845,7 +845,7 @@ local tg__zhenfan = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    room:broadcastSkillInvoke("jijiang")
+    player:broadcastSkillInvoke("jijiang")
     local target = room:getPlayerById(self.cost_data)
     local use = room:askForUseCard(target, "slash", nil, "#tg__zhenfan-slash:" .. player.id, true, {bypass_times = true})
     if use then
@@ -1092,7 +1092,7 @@ local tg__bingji = fk.CreateTriggerSkill{
     local mark = type(player:getMark("_tg__bingji")) == "table" and player:getMark("_tg__bingji") or { {}, {}, {} }
     local target = self.cost_data
     table.insert(mark[data], target)
-    player:setMark("_tg__bingji", mark)
+    room:setPlayerMark(player, "_tg__bingji", mark)
     if data == 3 then
       local slash = Fk:cloneCard("slash")
       slash.skillName = self.name
@@ -1328,7 +1328,7 @@ local tg__langbu = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    room:broadcastSkillInvoke(self.name)
+    player:broadcastSkillInvoke(self.name)
     room:notifySkillInvoked(player, self.name, player:getMark("@tg__langbu-round") < 3 and "drawcard" or "negative")
     room:useVirtualCard("avoiding_disadvantages", nil, player, player, self.name) --摆
     if not player.dead then room:addPlayerMark(player, "@tg__langbu-round") end
