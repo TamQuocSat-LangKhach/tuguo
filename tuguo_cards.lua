@@ -80,13 +80,11 @@ local avoidingDisadvantagesSkill = fk.CreateActiveSkill{
       end
     end
     local cids = table.slice(room.draw_pile, 1, num + 1)
-    -- local ret = room:askForGuanxing(player, cids, nil, nil, self.name, true, { "Top", "pile_discard" }).bottom
-    local to_discard = room:askForCardsChosen(player, player, 0, #cids, {
+    local to_discard = room:askForCardsChosen(player, player, 0, num, {
       card_data = {
         { "Top", cids }
       }
-      -- 有prompt就好了
-    }, self.name)
+    }, self.name, "#AD-discard:::" .. num)
     room:moveCardTo(to_discard, Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name)
   end
 }
@@ -109,6 +107,7 @@ Fk:loadTranslationTable{
   ["#AD-draw"] = "你即将摸%arg张牌，可使用【违害就利】，观看牌堆顶%arg2张牌，将其中任意张牌置于弃牌堆",
   ["#AD-negative"] = "你可使用【违害就利】，选择失去1点体力或减1点体力上限",
   ["avoiding_disadvantages_skill"] = "违害就利",
+  ["#AD-discard"] = "违害就利：观看牌堆顶至多%arg张牌，可将其中任意张牌置于弃牌堆",
 }
 
 local defeating_the_double_active = fk.CreateActiveSkill{
