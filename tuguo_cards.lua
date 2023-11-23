@@ -48,9 +48,7 @@ local avoidingDisadvantagesTrigger = fk.CreateTriggerSkill{
 Fk:addSkill(avoidingDisadvantagesTrigger)
 local avoidingDisadvantagesSkill = fk.CreateActiveSkill{
   name = "avoiding_disadvantages_skill",
-  can_use = function()
-    return false
-  end,
+  can_use = Util.FalseFunc,
   on_use = function(self, room, cardUseEvent)
     if not cardUseEvent.tos or #TargetGroup:getRealTargets(cardUseEvent.tos) == 0 then
       cardUseEvent.tos = { { cardUseEvent.from } }

@@ -888,7 +888,7 @@ local tg__danding = fk.CreateTriggerSkill{
   name = "tg__danding",
   events = {fk.Damage},
   can_trigger = function(self, event, target, player, data)
-    if target ~= player or not player:hasSkill(self) or not data.to or data.to == player then return false end
+    if target ~= player or not player:hasSkill(self) or not data.to or data.to == player or data.to.dead then return false end
     return #player:getCardIds{Player.Hand, Player.Equip, Player.Judge} + #data.to:getCardIds{Player.Hand, Player.Equip, Player.Judge} > 1
   end,
   on_cost = function(self, event, target, player, data)
@@ -897,23 +897,46 @@ local tg__danding = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     local target = data.to
-    local result = room:askForCustomDialog(player, self.name,
-      "packages/tuguo/qml/DandingBox.qml", {
-        player.general, player:getCardIds(Player.Hand), player:getCardIds(Player.Equip), player:getCardIds(Player.Judge),
-        target.general, target:getCardIds(Player.Hand), target:getCardIds(Player.Equip), target:getCardIds(Player.Judge),
-      })
-    local cards
-    if result == "" then
-      local ids1 = table.simpleClone(player:getCardIds{Player.Hand, Player.Equip, Player.Judge})
-      local ids2 = table.simpleClone(target:getCardIds{Player.Hand, Player.Equip, Player.Judge})
-      table.insertTable(ids1, ids2)
-      cards = table.random(ids1, 2)
-    else
-      cards = json.decode(result)
+    local card_data = {}
+    if target:getHandcardNum() > 0 then
+      local handcards = {}
+      for _ = 1, target:getHandcardNum() do
+        table.insert(handcards, -1) -- 手牌不可见
+      end
+      table.insert(card_data, {"$Hand_opposite", handcards})
     end
-    local cards1 = table.filter(cards, function(id) return table.contains(player:getCardIds{Player.Hand, Player.Equip, Player.Judge}, id) end)
-    local cards2 = table.filter(cards, function(id) return table.contains(target:getCardIds{Player.Hand, Player.Equip, Player.Judge}, id) end)
+    local areas = { {"$Equip", Player.Equip}, {"$Judge", Player.Judge} }
+    for _, v in ipairs(areas) do
+      local area = v[2]
+      if #target.player_cards[area] > 0 then
+        table.insert(card_data, {v[1] .. "_opposite", target:getCardIds(area)})
+      end
+    end
+    table.insert(areas, 1, { "$Hand", Player.Hand})
+    for _, v in ipairs(areas) do
+      local area = v[2]
+      if #player.player_cards[area] > 0 then
+        table.insert(card_data, {v[1] .. "_own", player:getCardIds(area)})
+      end
+    end
+
+    local ret = room:askForPoxi(player, "tg__danding_discard", card_data, nil, false)
+    local new_ret = table.filter(ret, function(id) return id ~= -1 end)
+    local hand_num = #ret - #new_ret
+    if hand_num > 0 then
+      table.insertTable(new_ret, table.random(target:getCardIds(Player.Hand), hand_num))
+    end
     local moveInfos = {}
+    local cards1 = {}
+    for i = #new_ret, 1, -1 do
+      if room:getCardOwner(new_ret[i]) == player then
+        table.insert(cards1, new_ret[i])
+        table.remove(new_ret, i)
+      end
+    end
+    local to_draw = not table.find(cards1, function (id)
+      return room:getCardArea(id) ~= Player.Judge
+    end)
     if #cards1 > 0 then
       table.insert(moveInfos, {
         from = player.id,
@@ -924,10 +947,10 @@ local tg__danding = fk.CreateTriggerSkill{
         skillName = self.name,
       })
     end
-    if #cards2 > 0 then
+    if #new_ret > 0 then
       table.insert(moveInfos, {
         from = target.id,
-        ids = cards2,
+        ids = new_ret,
         toArea = Card.DiscardPile,
         moveReason = fk.ReasonDiscard,
         proposer = player.id,
@@ -935,9 +958,22 @@ local tg__danding = fk.CreateTriggerSkill{
       })
     end
     room:moveCards(table.unpack(moveInfos))
-    if not target.dead and #cards1 == 0 then
+    if not target.dead and to_draw then
       target:drawCards(1, self.name)
     end
+  end,
+}
+Fk:addPoxiMethod{
+  name = "tg__danding_discard",
+  card_filter = Util.TrueFunc,
+  feasible = function(selected, data)
+    return #selected == 2
+  end,
+  prompt = "#tg__danding-choose",
+  default_choice = function(data)
+    if not data then return {} end
+    local cids = table.connect(data, function(v) return v[2] end)
+    return table.random(cids, 2)
   end,
 }
 
@@ -979,10 +1015,17 @@ Fk:loadTranslationTable{
   [":tg__zhemou"] = "限定技，你可以跳过出牌阶段和弃牌阶段，视为依次使用无距离和目标数限制的【顺手牵羊】和【杀】。",
 
   ["#tg__danding"] = "胆定：你可弃置你与 %dest 区域内共计两张牌，若其中没有你的牌，其摸一张牌",
-  ["#danding-choose"] = "胆定：弃置双方共计两张牌",
+  ["tg__danding_discard"] = "胆定",
+  ["#tg__danding-choose"] = "胆定：弃置你和其区域内共计两张牌，若其中没有你的牌，其摸一张牌",
   ["#tg__zhemou"] = "你可发动“折谋”，跳过出牌阶段和弃牌阶段，视为依次使用无距离和目标数限制的【顺手牵羊】和【杀】",
   ["#tg__zhemou-snatch"] = "折谋：视为使用无距离和目标数限制的【顺手牵羊】",
   ["#tg__zhemou-slash"] = "折谋：视为使用无距离和目标数限制的【杀】",
+  ["$Hand_opposite"] = "对方手牌区",
+  ["$Equip_opposite"] = "对方装备区",
+  ["$Judge_opposite"] = "对方判定区",
+  ["$Hand_own"] = "你的手牌区",
+  ["$Equip_own"] = "你的装备区",
+  ["$Judge_own"] = "你的判定区",
 }
 
 local tg__shiji = General(extension, "tg__shiji", "wu", 4)
