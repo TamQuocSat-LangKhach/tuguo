@@ -223,7 +223,7 @@ Fk:loadTranslationTable{
 }
 
 local tg__dailing = General(extension, "tg__dailing", "wei", 4)
-
+tg__dailing.hidden = true
 local tg__zhoubing = fk.CreateTriggerSkill{
   name = "tg__zhoubing",
   anim_type = "offensive",
@@ -1652,7 +1652,7 @@ Fk:loadTranslationTable{ --tg__hanyinghanyaohanqionghanqi!
 }
 
 local tg__caojie = General(extension, "tg__caojie", "qun", 3, 3, General.Female)
-
+tg__caojie.hidden = true
 local tg__weixi = fk.CreateTriggerSkill{
   name = "tg__weixi",
   events = {fk.Damaged},
