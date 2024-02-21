@@ -125,6 +125,7 @@ local defeating_the_double_active = fk.CreateActiveSkill{
 Fk:addSkill(defeating_the_double_active)
 local defeatingTheDoubleSkill = fk.CreateActiveSkill{
   name = "defeating_the_double_skill",
+  mod_target_filter = Util.TrueFunc,
   on_use = function(self, room, cardUseEvent)
     if not cardUseEvent.tos or #TargetGroup:getRealTargets(cardUseEvent.tos) == 0 then
       cardUseEvent.tos = { { cardUseEvent.from } }
