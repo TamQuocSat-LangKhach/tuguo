@@ -2,7 +2,7 @@ local extension = Package("tuguo_generals")
 extension.extensionName = "tuguo"
 
 Fk:loadTranslationTable{
-  ["tuguo"] = "图国篇", --strengthening the country，但是好长
+  ["tuguo"] = "图国篇", -- strengthening the country，但是好长
   ["tuguo_generals"] = "图国篇",
   ["tg"] = "图国",
 }
@@ -72,7 +72,11 @@ tg__wangchang:addSkill(tg__kaiji)
 tg__wangchang:addSkill(tg__pingxi)
 
 Fk:loadTranslationTable{
-  ["tg__wangchang"] = "王昶", --TG001 攥策及江 插画绘制：B_LEE 技能设计：韩旭 称号设计：圣帝
+  ["tg__wangchang"] = "王昶", -- TG001 称号设计：圣帝
+  ["#tg__wangchang"] = "攥策及江",
+  ["illustrator:tg__wangchang"] = "B_LEE",
+  ["designer:tg__wangchang"] = "韩旭",
+
   ["tg__kaiji"] = "开济",
   [":tg__kaiji"] = "转换技，出牌阶段限一次，阳：你可以将手牌摸至X张；阴：你可以弃置X张手牌。（X为你的手牌上限）",
   ["tg__pingxi"] = "平袭",
@@ -207,7 +211,11 @@ tg__xuzhi:addSkill(tg__fenwei)
 tg__xuzhi:addSkill(tg__yanfa)
 
 Fk:loadTranslationTable{
-  ["tg__xuzhi"] = "徐质", --TG002 覆天穷斗 插画绘制：Aimer彩三 技能设计：竹沐雨 称号设计：雪侯
+  ["tg__xuzhi"] = "徐质", -- TG002 称号设计：雪侯
+  ["#tg__xuzhi"] = "覆天穷斗",
+  ["illustrator:tg__xuzhi"] = "Aimer彩三",
+  ["designer:tg__xuzhi"] = "竹沐雨",
+
   ["tg__fenwei"] = "奋围",
   [":tg__fenwei"] = "每回合限一次，其他角色使用【闪】或本回合第二张同名牌结算结束后，若没有角色处于濒死状态，你可以翻面，视为对其使用一张【决斗】或【杀】（有距离限制）。",
   ["tg__yanfa"] = "掩伐",
@@ -300,7 +308,11 @@ tg__dailing:addSkill(tg__zhoubing)
 tg__dailing:addSkill(tg__rangtu)
 
 Fk:loadTranslationTable{
-  ["tg__dailing"] = "戴陵", --TG003 望断群峦 插画绘制：恶童 技能设计：恶童 称号设计：（众人集思广益） 
+  ["tg__dailing"] = "戴陵", -- TG003 称号设计：（众人集思广益）
+  ["#tg__dailing"] = "望断群峦",
+  ["illustrator:tg__dailing"] = "恶童",
+  ["designer:tg__dailing"] = "恶童",
+
   ["tg__zhoubing"] = "骤兵",
   [":tg__zhoubing"] = "其他角色的回合结束时，你可以视为使用一张无距离限制且目标数为X的【杀】（X为其本回合跳过的阶段数）。",
   ["tg__rangtu"] = "攘途",
@@ -482,7 +494,11 @@ tg__zhongyu:addSkill(tg__jianlian)
 tg__zhongyu:addSkill(tg__wanzu)
 
 Fk:loadTranslationTable{
-  ["tg__zhongyu"] = "钟毓", --TG004 温恭的瞻略者 插画绘制：琛·美弟奇 技能设计：Z.诺贝尔 称号设计：羌溪散人
+  ["tg__zhongyu"] = "钟毓", -- TG004 称号设计：羌溪散人
+  ["#tg__zhongyu"] = "温恭的瞻略者",
+  ["illustrator:tg__zhongyu"] = "琛·美弟奇",
+  ["designer:tg__zhongyu"] = "Z.诺贝尔",
+
   ["tg__jianlian"] = "谏练",
   [":tg__jianlian"] = "出牌阶段限一次，你可以将一张黑色牌交给一名其他角色，然后选择一项：1. 观看牌堆顶三张牌，获得其中一张，此牌不计入你的手牌上限；2. 令其对你指定的一名角色使用一张牌。<br /><font color='grey'>（注：暂时bug，无法使用AOE、装备牌等）</font>", --1. 观看图国牌堆中共计三张牌，将其中一张置入你的图国区
   ["tg__wanzu"] = "完族",
@@ -662,7 +678,11 @@ tg__liaoli:addSkill(tg__fenlun)
 tg__liaoli:addSkill(tg__qihcai)
 
 Fk:loadTranslationTable{
-  ["tg__liaoli"] = "廖立", --TG006 䯄足难踏 插画绘制：周千策 技能设计：理亚&竹沐雨 称号设计：圣帝
+  ["tg__liaoli"] = "廖立", -- TG006 称号设计：圣帝
+  ["#tg__liaoli"] = "䯄足难踏",
+  ["illustrator:tg__liaoli"] = "周千策",
+  ["designer:tg__liaoli"] = "理亚&竹沐雨",
+
   ["tg__fenlun"] = "忿论",
   [":tg__fenlun"] = "其他角色的回合结束时，你可以与其拼点：若你赢，你可以视为使用一张当前回合角色此回合使用过的基本或普通锦囊牌；若你没赢，你可以与此次发动技能未选择过的一名角色重复此流程。", --你可以视为使用一张该角色本回合使用过且被其他角色响应过的牌
   ["tg__qihcai"] = "弃才",
@@ -766,7 +786,11 @@ tg__jiancheng:addRelatedSkill(tg__jiancheng_distance)
 tg__luoxian:addSkill(tg__jiancheng)
 
 Fk:loadTranslationTable{
-  ["tg__luoxian"] = "罗宪", --TG005 不坠的坚壁 插画绘制：B_LEE 技能设计：羌溪散人 称号设计：扬林
+  ["tg__luoxian"] = "罗宪", -- TG005 称号设计：扬林
+  ["#tg__luoxian"] = "不坠的坚壁",
+  ["illustrator:tg__luoxian"] = "B_LEE",
+  ["designer:tg__luoxian"] = "羌溪散人",
+
   ["tg__jiancheng"] = "坚城",
   [":tg__jiancheng"] = "每轮限两次，当你需要使用/打出一种基本牌时，你可以展示牌堆顶和牌堆底各一张牌，视为使用/打出之，若这两张牌颜色不同，你获得这两张牌，然后本轮内此技能失效且其他角色至你距离+1。",
 
@@ -869,7 +893,11 @@ tg__liuyongliuli:addSkill(tg__zunxiu)
 tg__liuyongliuli:addSkill(tg__zhenfan)
 
 Fk:loadTranslationTable{
-  ["tg__liuyongliuli"] = "刘永刘理", --TG008 东藩远室 插画绘制：特异型安妮 技能设计：晓绝对 称号设计：圣帝
+  ["tg__liuyongliuli"] = "刘永刘理", -- TG008 称号设计：圣帝  
+  ["#tg__liuyongliuli"] = "东藩远室",
+  ["illustrator:tg__liuyongliuli"] = "特异型安妮",
+  ["designer:tg__liuyongliuli"] = "晓绝对",
+
   ["tg__zunxiu"] = "遵修",
   [":tg__zunxiu"] = "锁定技，当你使用或打出基本牌时，你令当前回合角色的基本牌直到回合结束均视为此牌；回合结束时，若你本回合只使用过基本牌，你摸X张牌（X为你本回合使用的牌数）。",
   ["tg__zhenfan"] = "振藩",
@@ -1008,7 +1036,11 @@ tg__zhuyi:addSkill(tg__danding)
 tg__zhuyi:addSkill(tg__zhemou)
 
 Fk:loadTranslationTable{
-  ["tg__zhuyi"] = "朱异", --TG010 锋坠镬中 插画绘制：恶童 技能设计：紫星居 称号设计：会乱武的袁绍
+  ["tg__zhuyi"] = "朱异", -- TG010 称号设计：会乱武的袁绍
+  ["#tg__zhuyi"] = "锋坠镬中",
+  ["illustrator:tg__zhuyi"] = "恶童",
+  ["designer:tg__zhuyi"] = "紫星居",
+
   ["tg__danding"] = "胆定",
   [":tg__danding"] = "当你对其他角色造成伤害后，你可以弃置你与其区域内共计两张牌，若其中没有你的牌，其摸一张牌。",
   ["tg__zhemou"] = "折谋",
@@ -1174,7 +1206,11 @@ tg__shiji:addSkill(tg__danli)
 tg__shiji:addSkill(tg__bingji)
 
 Fk:loadTranslationTable{
-  ["tg__shiji"] = "施绩", --TG011 戍国之垒 插画绘制：蒋斯成 技能设计：竹沐雨 称号设计：恶童
+  ["tg__shiji"] = "施绩", -- TG011 称号设计：恶童
+  ["#tg__shiji"] = "戍国之垒",
+  ["illustrator:tg__shiji"] = "蒋斯成",
+  ["designer:tg__shiji"] = "竹沐雨",
+
   ["tg__danli"] = "胆力",
   [":tg__danli"] = "每回合限X次（X为你已损失的体力值+1），你的每个阶段开始时，你可以摸一张牌并弃置区域内的一张牌。",
   ["tg__bingji"] = "并击",
@@ -1342,7 +1378,11 @@ tg__sunjiao:addSkill(tg__jueyu)
 tg__sunjiao:addSkill(tg__shuangkai)
 
 Fk:loadTranslationTable{
-  ["tg__sunjiao"] = "孙皎", -- TG012 柔远周迩 插画绘制：大佬荣&Aimer彩三 技能设计&称号设计：会乱武的袁绍
+  ["tg__sunjiao"] = "孙皎", -- TG012 称号设计：会乱武的袁绍
+  ["#tg__sunjiao"] = "柔远周迩",
+  ["illustrator:tg__sunjiao"] = "大佬荣&Aimer彩三",
+  ["designer:tg__sunjiao"] = "会乱武的袁绍",
+
   ["tg__jueyu"] = "攫誉",
   [":tg__jueyu"] = "出牌阶段开始时，你可以获得攻击范围外距离最近的其他角色各一张牌，然后此阶段结束时，你交给其中此阶段未成为过你牌目标的角色各一张牌。",
   ["tg__shuangkai"] = "爽慨",
@@ -1399,7 +1439,10 @@ tg__yangfenghanxian:addSkill(tg__langbu)
 tg__yangfenghanxian:addSkill(tg__siye)
 
 Fk:loadTranslationTable{
-  ["tg__yangfenghanxian"] = "杨奉韩暹", --TG013 构辰鸱张 插画绘制：Aimer彩三 技能设计&称号设计：会乱武的袁绍
+  ["tg__yangfenghanxian"] = "杨奉韩暹", -- TG013 称号设计：会乱武的袁绍
+  ["#tg__yangfenghanxian"] = "构辰鸱张",
+  ["illustrator:tg__yangfenghanxian"] = "Aimer彩三",
+  ["designer:tg__yangfenghanxian"] = "会乱武的袁绍",
   ["tg__langbu"] = "狼逋",
   [":tg__langbu"] = "锁定技，当你摸牌时，你视为使用一张【违害就利】；你使用【违害就利】观看牌数-X（X为本轮〖狼逋〗已发动次数且至多为3），若已减至0，此牌的效果改为令你失去1点体力或减1点体力上限。<br/><font color='grey'>【<b>违害就利</b>】锦囊牌 你从牌堆摸牌或进行判定时，对你使用。目标角色观看牌堆顶的三张牌，然后将其中任意张牌置于弃牌堆。",
   ["tg__siye"] = "肆野",
@@ -1497,7 +1540,11 @@ tg__dengzhong:addSkill(tg__xiannan)
 tg__dengzhong:addSkill(tg__shuanggu)
 
 Fk:loadTranslationTable{
-  ["tg__dengzhong"] = "邓忠", -- TG018 蹈覆奋旋 插画绘制：恶童 技能设计：紫髯的小乔 称号设计：？
+  ["tg__dengzhong"] = "邓忠", -- TG018 称号设计：？
+  ["#tg__dengzhong"] = "蹈覆奋旋",
+  ["illustrator:tg__dengzhong"] = "恶童",
+  ["designer:tg__dengzhong"] = "紫髯的小乔",
+
   ["tg__xiannan"] = "陷难",
   [":tg__xiannan"] = "当你于一轮内失去第一张牌或第X张牌后（X为你的体力上限），你可摸一张牌，令你于此回合下一次造成或受到的伤害+1。",
   ["tg__shuanggu"] = "霜骨",
@@ -1556,7 +1603,11 @@ tg__shixie:addSkill(tg__jueyuk)
 tg__shixie:addSkill(tg__bode)
 
 Fk:loadTranslationTable{
-  ["tg__shixie"] = "士燮", --TG019 百越归仁 插画绘制：彩三&特异型安妮 技能设计：羌溪散人 称号设计：？
+  ["tg__shixie"] = "士燮", -- TG019 称号设计：？
+  ["#tg__shixie"] = "百越归仁",
+  ["illustrator:tg__shixie"] = "彩三&特异型安妮",
+  ["designer:tg__shixie"] = "羌溪散人",
+
   ["tg__jueyuk"] = "绝域",
   [":tg__jueyuk"] = "锁定技，手牌多于你的角色至你距离+1。",
   ["tg__bode"] = "播德",
@@ -1638,8 +1689,12 @@ local tg__tongzhen = fk.CreateTriggerSkill{
 
 tg__sihan:addSkill(tg__tongzhen)
 
-Fk:loadTranslationTable{ --tg__hanyinghanyaohanqionghanqi!
-  ["tg__sihan"] = "韩伵", --TG021 厉鬣衅龙 插画绘制：恶童 技能设计：突然消失 称号设计：？
+Fk:loadTranslationTable{ -- TG__hanyinghanyaohanqionghanqi!
+  ["tg__sihan"] = "韩伵", -- TG021 称号设计：？
+  ["#tg__sihan"] = "厉鬣衅龙",
+  ["illustrator:tg__sihan"] = "恶童",
+  ["designer:tg__sihan"] = "突然消失",
+
   ["tg__tongzhen"] = "恸阵",
   [":tg__tongzhen"] = "当你{失去最后的手牌/脱离濒死/所属阵营变为仅剩一人/死亡}后，你可以视为使用一张无距离、次数和目标数限制的【杀】，此【杀】的伤害值基数为你触发过的〖恸阵〗条件数。<font color='grey'>其实叫“<b>韩瑛&韩瑶&韩琼&韩琪</b>”，名字太长……“伵”xù（@韩旭）",
 
@@ -1772,7 +1827,11 @@ tg__caojie:addSkill(tg__weixi)
 tg__caojie:addSkill(tg__xuanhu)
 
 Fk:loadTranslationTable{
-  ["tg__caojie"] = "曹节", --TG022 瑕玮终璧 插画绘制：特异型安妮 技能设计：紫髯的小乔 称号设计：？
+  ["tg__caojie"] = "曹节", -- TG022 称号设计：？
+  ["#tg__caojie"] = "瑕玮终璧",
+  ["illustrator:tg__caojie"] = "特异型安妮",
+  ["designer:tg__caojie"] = "紫髯的小乔",
+
   ["tg__weixi"] = "遗玺",
   [":tg__weixi"] = "限定技，当其他角色受到伤害后，若其因此不再是体力值唯一最大的角色，你可以与其各摸一张牌，然后本局游戏你与其摸牌阶段结束时，你与其各摸一张牌。",
   ["tg__xuanhu"] = "悬壶",
