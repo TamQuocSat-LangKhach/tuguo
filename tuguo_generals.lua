@@ -335,13 +335,13 @@ local tg__jianlian = fk.CreateActiveSkill{
   end,
   card_num = 1,
   target_num = 1,
-  card_filter = function(self, to_select, player)
-    local card = Fk:getCardById(to_select) --?
-    return card and card.color == Card.Black
+  card_filter = function (self, to_select, selected)
+    return #selected == 0 and Fk:getCardById(to_select).color == Card.Black
   end,
   target_filter = function(self, to_select, selected)
     return #selected == 0 and to_select ~= Self.id
   end,
+  prompt = "#tg__jianlian-prompt",
   on_use = function (self, room, effect)
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
@@ -354,8 +354,7 @@ local tg__jianlian = fk.CreateActiveSkill{
       for i = #top, 1, -1 do
         table.insert(room.draw_pile, 1, top[i])
       end
-      room:setCardMark(Fk:getCardById(cid), "@@tg__jianlian-inhand", 1)
-      room:obtainCard(player, cid, false, fk.ReasonPrey)
+      room:obtainCard(player, cid, false, fk.ReasonPrey, player.id, self.name, "@@tg__jianlian-inhand")
     else
       local to = room:askForChoosePlayers(player, table.map(room.alive_players, function(p) return p.id end), 1, 1, "#tg__jianlian-target::" .. target.id, self.name, false)[1]
       local use = room:askForUseCard(target, "", ".", "#tg__jianlian-use::" .. to, false, {must_targets = {to} }) --false!
@@ -375,13 +374,14 @@ tg__jianlian:addRelatedSkill(tg__jianlian_maxcards)
 
 local tg__wanzu = fk.CreateTriggerSkill{
   name = "tg__wanzu",
-  events = {fk.EventPhaseChanging},
+  events = {fk.TurnEnd},
   anim_type = "special",
   can_trigger = function(self, event, target, player, data)
-    if not player:hasSkill(self) or data.to ~= Player.NotActive then return false end
-    player.room.logic:getEventsOfScope(GameEvent.MoveCards, 999, function(e)
+    if not player:hasSkill(self) then return false end
+    return #player.room.logic:getEventsOfScope(GameEvent.MoveCards, 1, function(e)
       for _, move in ipairs(e.data) do
-        if move and move.toArea == Card.PlayerHand and move.from == player.id and move.to and player.room:getPlayerById(move.to) and move.to ~= player.id then
+        if move and move.toArea == Card.PlayerHand and move.from == player.id and move.to and
+         move.to ~= player.id and not player.room:getPlayerById(move.to).dead then
           for _, info in ipairs(move.moveInfo) do
             if info.fromArea == Card.PlayerHand or info.fromArea == Card.PlayerEquip then
               return true
@@ -389,61 +389,62 @@ local tg__wanzu = fk.CreateTriggerSkill{
           end
         end
       end
-    end, Player.HistoryTurn)
+    end, Player.HistoryTurn) > 0
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
     local targets = {}
     room.logic:getEventsOfScope(GameEvent.MoveCards, 999, function(e)
-      local move = e.data[1]
-      if move.toArea == Card.PlayerHand and move.from == player.id and move.to and room:getPlayerById(move.to) and move.to ~= player.id then
-        for _, info in ipairs(move.moveInfo) do
-          if info.fromArea == Card.PlayerHand or info.fromArea == Card.PlayerEquip then
-            table.insertIfNeed(targets, move.to)
+      for _, move in ipairs(e.data) do
+        if move.toArea == Card.PlayerHand and move.from == player.id and move.to
+        and move.to ~= player.id and not player.room:getPlayerById(move.to).dead then
+          for _, info in ipairs(move.moveInfo) do
+            if info.fromArea == Card.PlayerHand or info.fromArea == Card.PlayerEquip then
+              table.insertIfNeed(targets, move.to)
+            end
           end
         end
       end
     end, Player.HistoryTurn)
-    local target = room:askForChoosePlayers(player, targets, 1, 1, "#tg__wanzu-target", self.name, true)
-    if #target > 0 then
-      target = target[1]
-      local choices = {"tg__wanzu_distance:" .. target, "Cancel"}
-      if not room:getPlayerById(target):isAllNude() then
-        table.insert(choices, 1, "tg__wanzu_move:" .. target)
+    local tos = room:askForChoosePlayers(player, targets, 1, 1, "#tg__wanzu-target", self.name, true)
+    if #tos > 0 then
+      local to = room:getPlayerById(tos[1])
+      local choices = {"tg__wanzu_distance:" .. to.id, "Cancel"}
+      if not to:isAllNude() then
+        table.insert(choices, 1, "tg__wanzu_move:" .. to.id)
       end
       local choice = room:askForChoice(player, choices, self.name)
       if choice ~= "Cancel" then
-        self.cost_data = {choice, target}
+        self.cost_data = {choice, to.id}
         return true
       end
-    end    
+    end
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local choice, target = self.cost_data[1], room:getPlayerById(self.cost_data[2])
+    local choice, to = self.cost_data[1], room:getPlayerById(self.cost_data[2])
     if choice:startsWith("tg__wanzu_distance") then
-      room:addPlayerMark(target, "@tg__wanzu_distance")
+      room:addPlayerMark(to, "@tg__wanzu_distance")
     else
-      local id = room:askForCardChosen(player, target, "hej", self.name)
+      local id = room:askForCardChosen(player, to, "hej", self.name)
       local fromArea = room:getCardArea(id)
-      local move3 = {
-        ids = {id},
-        fromArea = fromArea,
-        from = target.id,
-        to = player.id,
-        toArea = fromArea,
-        moveReason = fk.ReasonJustMove,
-        proposer = player.id,
-        skillName = self.name,
-      }
       local card = Fk:getCardById(id)
-      local equip = fromArea == Card.PlayerEquip and player:getEquipment(card.sub_type) ~= nil
-      local judge = fromArea == Card.PlayerJudge and player:hasDelayedTrick(card.name)
-      if equip or judge then
-        local ids
-        if equip then
-          ids = {player:getEquipment(card.sub_type)}
-        else
+      if fromArea == Card.PlayerEquip then
+        room:moveCardIntoEquip(player, id, self.name, true, player)
+      else
+        local move3 = {
+          ids = {id},
+          fromArea = fromArea,
+          from = to.id,
+          to = player.id,
+          toArea = fromArea,
+          moveReason = fk.ReasonJustMove,
+          proposer = player.id,
+          skillName = self.name,
+        }
+        local judge = fromArea == Card.PlayerJudge and player:hasDelayedTrick(card.name)
+        if judge then
+          local ids = {}
           for _, i in ipairs(player:getCardIds(Player.Judge)) do
             local c = player:getVirualEquip(i)
             if not c then c = Fk:getCardById(i) end
@@ -452,17 +453,17 @@ local tg__wanzu = fk.CreateTriggerSkill{
               break
             end
           end
+          local move2 = {
+            ids = ids,
+            from = player.id,
+            fromArea = fromArea,
+            toArea = Card.DiscardPile,
+            moveReason = fk.ReasonJustMove,
+          }
+          room:moveCards(move2, move3)
+        else
+          room:moveCards(move3)
         end
-        local move2 = {
-          ids = ids,
-          from = player.id,
-          fromArea = fromArea,
-          toArea = Card.DiscardPile,
-          moveReason = fk.ReasonJustMove,
-        }
-        room:moveCards(move2, move3)
-      else
-        room:moveCards(move3)
       end
     end
   end,
@@ -502,8 +503,9 @@ Fk:loadTranslationTable{
   ["tg__jianlian"] = "谏练",
   [":tg__jianlian"] = "出牌阶段限一次，你可以将一张黑色牌交给一名其他角色，然后选择一项：1. 观看牌堆顶三张牌，获得其中一张，此牌不计入你的手牌上限；2. 令其对你指定的一名角色使用一张牌。<br /><font color='grey'>（注：暂时bug，无法使用AOE、装备牌等）</font>", --1. 观看图国牌堆中共计三张牌，将其中一张置入你的图国区
   ["tg__wanzu"] = "完族",
-  [":tg__wanzu"] = "一名角色的回合结束时，你可以选择一名本回合获得过你的牌的角色并选择一项：1. 将其区域内的一张牌移动至你的相同区域（替换原有牌）；2. 令除其外的角色至其距离+1，直至其体力值变化。",
+  [":tg__wanzu"] = "一名角色的回合结束时，你可以选择一名本回合获得过你的牌的角色并选择一项：1. 将其区域内的一张牌移动至你的相同区域（替换原有牌）；2.令除其外的角色至其距离+1，直至其体力值变化。",
 
+  ["#tg__jianlian-prompt"] = "谏练：将一张黑色牌交给一名其他角色，然后观看牌堆顶牌，或令其使用牌",
   ["tg__jianlian_obtain"] = "观看牌堆顶三张牌，获得其中一张，此牌不计入你的手牌上限",
   ["tg__jianlian_use"] = "令%dest对你指定的一名角色使用一张牌",
   ["#tg__jianlian"] = "谏练：观看牌堆顶三张牌，获得其中一张，此牌不计入你的手牌上限",
@@ -511,8 +513,8 @@ Fk:loadTranslationTable{
   ["#tg__jianlian-target"] = "谏练：选择一名角色，令 %dest 对其使用一张牌",
   ["#tg__jianlian-use"] = "谏练：对 %dest 使用一张牌",
   ["#tg__wanzu-target"] = "你可以对一名本回合获得过你的牌的角色发动“完族”",
-  ["tg__wanzu_distance"] = "令除%src外的角色至其距离+1，直至其体力值变化",
-  ["tg__wanzu_move"] = "将%src区域内的一张牌移动至你的相同区域",
+  ["tg__wanzu_distance"] = "令除 %src 外的角色至其距离+1，直至其体力值变化",
+  ["tg__wanzu_move"] = "将 %src 区域内的一张牌移动至你的相同区域",
   ["@tg__wanzu_distance"] = "完族 至其距离+",
   ["#tg__wanzu_dis_remove"] = "完族[距离清零]",
 }
