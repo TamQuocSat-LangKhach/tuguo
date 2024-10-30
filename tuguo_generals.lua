@@ -1625,7 +1625,7 @@ local tg__tongzhen = fk.CreateTriggerSkill{
   anim_type = "offensive",
   events = {fk.AfterCardsMove, fk.AfterDying, fk.Death, fk.Deathed, fk.GameStart},
   can_trigger = function(self, event, target, player, data)
-    if not player:hasSkill(self.name, false, true) or player:prohibitUse(Fk:cloneCard("slash")) then return false end
+    if not player:hasSkill(self, false, true) or player:prohibitUse(Fk:cloneCard("slash")) then return false end
     local room = player.room
     if event == fk.AfterCardsMove then
       for _, move in ipairs(data) do
