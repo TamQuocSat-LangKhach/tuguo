@@ -351,9 +351,6 @@ local tg__jianlian = fk.CreateActiveSkill{
     if choice == "tg__jianlian_obtain" then
       local result = room:askForGuanxing(player, room:getNCards(3), nil, {1, 1}, "#tg__jianlian", true, {"Top", "tg__pingxiGet"})
       local top, cid = result.top, result.bottom[1]
-      for i = #top, 1, -1 do
-        table.insert(room.draw_pile, 1, top[i])
-      end
       room:obtainCard(player, cid, false, fk.ReasonPrey, player.id, self.name, "@@tg__jianlian-inhand")
     else
       local to = room:askForChoosePlayers(player, table.map(room.alive_players, function(p) return p.id end), 1, 1, "#tg__jianlian-target::" .. target.id, self.name, false)[1]
