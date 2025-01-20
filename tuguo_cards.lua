@@ -91,6 +91,7 @@ local avoidingDisadvantages = fk.CreateTrickCard{
   suit = Card.Spade,
   number = 12,
   skill = avoidingDisadvantagesSkill,
+  is_passive = true,
 }
 extension:addCards{
   avoidingDisadvantages,
@@ -111,8 +112,7 @@ Fk:loadTranslationTable{
 local defeating_the_double_active = fk.CreateActiveSkill{
   name = "defeating_the_double_active",
   mute = true,
-  --global = true,
-  can_use = function() return false end,
+  can_use = Util.FalseFunc,
   target_num = 1,
   min_card_num = 1,
   card_filter = function(self, to_select, selected)
@@ -126,6 +126,7 @@ Fk:addSkill(defeating_the_double_active)
 local defeatingTheDoubleSkill = fk.CreateActiveSkill{
   name = "defeating_the_double_skill",
   mod_target_filter = Util.TrueFunc,
+  can_use = Util.SelfCanUse,
   on_use = function(self, room, cardUseEvent)
     if not cardUseEvent.tos or #TargetGroup:getRealTargets(cardUseEvent.tos) == 0 then
       cardUseEvent.tos = { { cardUseEvent.from } }
@@ -134,6 +135,7 @@ local defeatingTheDoubleSkill = fk.CreateActiveSkill{
   on_effect = function(self, room, cardEffectEvent)
     local player = room:getPlayerById(cardEffectEvent.to)
     player:drawCards(1, "defeating_the_double")
+    if player.dead then return false end
     local _, ret = room:askForUseActiveSkill(player, "defeating_the_double_active", "#DB-ask", true)
     if ret then
       room:throwCard(ret.cards, self.name, player)
