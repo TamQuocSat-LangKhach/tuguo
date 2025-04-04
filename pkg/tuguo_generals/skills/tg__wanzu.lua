@@ -14,7 +14,7 @@ Fk:loadTranslationTable{
 
 tg__wanzu:addEffect(fk.TurnEnd, {
   anim_type = "special",
-  can_trigger = function(self, event, target, player, data)
+  can_trigger = function(self, event, target, player)
     if not player:hasSkill(tg__wanzu.name) then return false end
     return #player.room.logic:getEventsOfScope(GameEvent.MoveCards, 1, function(e)
       for _, move in ipairs(e.data) do
@@ -29,7 +29,7 @@ tg__wanzu:addEffect(fk.TurnEnd, {
       end
     end, Player.HistoryTurn) > 0
   end,
-  on_cost = function(self, event, target, player, data)
+  on_cost = function(self, event, target, player)
     local room = player.room
     local targets = {}
     room.logic:getEventsOfScope(GameEvent.MoveCards, 999, function(e)
@@ -50,7 +50,6 @@ tg__wanzu:addEffect(fk.TurnEnd, {
       max_num = 1,
       prompt = "#tg__wanzu-target",
       skill_name = tg__wanzu.name,
-      cancelable = true
     })
     if #tos > 0 then
       local to = room:getPlayerById(tos[1])
@@ -60,25 +59,26 @@ tg__wanzu:addEffect(fk.TurnEnd, {
       end
       local choice = room:askToChoice(player, {
         choices = choices,
-        skill_name = tg__wanzu.name
+        skill_name = tg__wanzu.name,
       })
       if choice ~= "Cancel" then
-        event:setCostData(skill, {choice, to.id})
+        event:setCostData(self, {choice, to.id})
         return true
       end
     end
   end,
-  on_use = function(self, event, target, player, data)
+  on_use = function(self, event, target, player)
     local room = player.room
-    local cost_data = event:getCostData(skill)
-    local choice, to = cost_data[1], room:getPlayerById(cost_data[2])
+    local cost_data = event:getCostData(self)
+    local choice, to_id = cost_data[1], cost_data[2]
+    local to = room:getPlayerById(to_id)
     if choice:startsWith("tg__wanzu_distance") then
       room:addPlayerMark(to, "@tg__wanzu_distance")
     else
       local id = room:askToChooseCard(player, {
         target = to,
         flag = "hej",
-        skill_name = tg__wanzu.name
+        skill_name = tg__wanzu.name,
       })
       local fromArea = room:getCardArea(id)
       local card = Fk:getCardById(id)
@@ -135,10 +135,10 @@ tg__wanzu:addEffect(fk.HpChanged, {
   name = "#tg__wanzu_dis_remove",
   mute = true,
   frequency = Skill.Compulsory,
-  can_trigger = function(self, event, target, player, data)
+  can_trigger = function(self, event, target, player)
     return target == player and player:getMark("@tg__wanzu_distance") ~= 0
   end,
-  on_use = function(self, event, target, player, data)
+  on_use = function(self, event, target, player)
     player.room:setPlayerMark(player, "@tg__wanzu_distance", 0)
   end,
 })

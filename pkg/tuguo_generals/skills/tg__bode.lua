@@ -28,13 +28,14 @@ tg__bode:addEffect('active', {
       local cards = table.filter(cids, function(id) return Fk:getCardById(id).type == Card.TypeTrick end)
       if #cards > 0 then
         local target = room:askToChoosePlayers(player, {
-          targets = table.map(targets, function(id) return room:getPlayerById(id) end),
+          targets = room:getAlivePlayers(),
           min_num = 1,
           max_num = 1,
           prompt = "#tg__bode-ask",
-          skill_name = tg__bode.name
+          skill_name = tg__bode.name,
+          cancelable = false
         })[1]
-        room:moveCardTo(cards, Player.Hand, target, fk.ReasonGive, tg__bode.name, nil, false)
+        room:moveCardTo(cards, Player.Hand, room:getPlayerById(target), fk.ReasonGive, tg__bode.name, nil, false)
         table.forEach(cards, function(id) table.removeOne(cids, id) end)
       end
     end

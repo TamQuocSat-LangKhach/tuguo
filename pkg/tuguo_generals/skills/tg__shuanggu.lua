@@ -1,4 +1,4 @@
-local biyue = fk.CreateSkill {
+local skel = fk.CreateSkill {
   name = "tg__shuanggu"
 }
 
@@ -10,14 +10,14 @@ Fk:loadTranslationTable{
   [':tg__shuanggu'] = '当你攻击范围内的角色受到致命伤害时，你可减1点体力上限，此回合防止你与其受到的伤害。',
 }
 
-biyue:addEffect(fk.DamageInflicted, {
+skel:addEffect(fk.DamageInflicted, {
   anim_type = "defensive",
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(biyue.name) and player:inMyAttackRange(target) and data.damage >= target.hp
+    return player:hasSkill(skel.name) and player:inMyAttackRange(target) and data.damage >= target.hp
   end,
   on_cost = function(self, event, target, player, data)
     return player.room:askToSkillInvoke(player, {
-      skill_name = biyue.name,
+      skill_name = skel.name,
       prompt = "#tg__shuanggu-ask::" .. target.id
     })
   end,
@@ -31,7 +31,7 @@ biyue:addEffect(fk.DamageInflicted, {
   end,
 })
 
-biyue:addEffect(fk.DamageInflicted, {
+skel:addEffect(fk.DamageInflicted, {
   name = "#tg__shuanggu_trig",
   mute = true,
   frequency = Skill.Compulsory,
@@ -41,4 +41,4 @@ biyue:addEffect(fk.DamageInflicted, {
   on_use = Util.TrueFunc,
 })
 
-return biyue
+return skel

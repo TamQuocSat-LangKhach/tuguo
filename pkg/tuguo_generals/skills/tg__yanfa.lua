@@ -58,7 +58,7 @@ tg__yanfa:addEffect(fk.TargetConfirmed, {
     local room = player.room
     local choice = event:getCostData(self)
     local cids
-    if choice:startsWith("tg__yanfa_hand") then
+    if string.startswith(choice, "tg__yanfa_hand") then
       cids = player:getCardIds("h")
       player:throwAllCards("h")
     else

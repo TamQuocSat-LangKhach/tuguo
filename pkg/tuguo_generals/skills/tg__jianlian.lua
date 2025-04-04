@@ -22,14 +22,14 @@ tg__jianlian:addEffect('active', {
   end,
   card_num = 1,
   target_num = 1,
-  card_filter = function (self, player, to_select, selected)
+  card_filter = function(self, player, to_select, selected)
     return #selected == 0 and Fk:getCardById(to_select).color == Card.Black
   end,
   target_filter = function(self, player, to_select, selected)
     return #selected == 0 and to_select ~= player.id
   end,
   prompt = "#tg__jianlian-prompt",
-  on_use = function (self, room, effect, event)
+  on_use = function (skill, room, effect)
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
     room:moveCardTo(effect.cards, Card.PlayerHand, target, fk.ReasonGive, tg__jianlian.name)
@@ -42,11 +42,11 @@ tg__jianlian:addEffect('active', {
       local result = room:askToGuanxing(player, {
         cards = room:getNCards(3),
         top_limit = {1, 1},
-        title = "#tg__jianlian",
+        skill_name = "#tg__jianlian",
         skip = true,
         area_names = {"Top", "tg__pingxiGet"}
       })
-      local top, cid = result.top, result.bottom[1]
+      local cid = result.bottom[1]
       room:obtainCard(player, cid, false, fk.ReasonPrey, player.id, tg__jianlian.name, "@@tg__jianlian-inhand")
     else
       local to = room:askToChoosePlayers(player, {
@@ -58,7 +58,7 @@ tg__jianlian:addEffect('active', {
       })[1]
       local use = room:askToUseCard(target, {
         pattern = "",
-        prompt = "#tg__jianlian-use::" .. to,
+        prompt = "#tg__jianlian-use::" .. to.id,
         cancelable = false,
         extra_data = {must_targets = {to}}
       })

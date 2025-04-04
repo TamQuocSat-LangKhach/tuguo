@@ -22,14 +22,16 @@ biyue:addEffect(fk.CardUseFinished, {
     end), function(p)
         return p.id
       end)
+
     local target = room:askToChoosePlayers(player, {
       targets = targets,
       min_num = 1,
       max_num = 1,
       prompt = "#tg__zhenfan-ask",
       skill_name = biyue.name,
-      cancelable = true,
+      cancelable = true
     })
+
     if #target > 0 then
       event:setCostData(self, target[1])
       return true
@@ -44,8 +46,9 @@ biyue:addEffect(fk.CardUseFinished, {
       pattern = "slash",
       prompt = "#tg__zhenfan-slash:" .. player.id,
       cancelable = true,
-      extra_data = { bypass_times = true },
+      extra_data = {bypass_times = true}
     })
+
     if use then
       room:useCard(use)
       room:addPlayerMark(player, "@tg__zhenfan-turn")
@@ -53,8 +56,7 @@ biyue:addEffect(fk.CardUseFinished, {
   end,
 })
 
-biyue:addEffect("targetmod", {
-  name = "#tg__zhenfan_buff",
+biyue:addEffect('targetmod', {
   residue_func = function(self, player, skill, scope)
     if player:getMark("@tg__zhenfan-turn") ~= 0 and skill.trueName == "slash_skill" and scope == Player.HistoryPhase then
       return player:getMark("@tg__zhenfan-turn")

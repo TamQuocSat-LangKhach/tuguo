@@ -14,10 +14,10 @@ Fk:loadTranslationTable{
 tg__jueyu:addEffect(fk.EventPhaseStart, {
   anim_type = "control",
   can_trigger = function(self, event, target, player)
-    return target == player and player:hasSkill(skill.name) and player.phase == Player.Play and table.find(player.room.alive_players, function(p) return not player:inMyAttackRange(p) and p ~= player and not p:isNude() end)
+    return target == player and player:hasSkill(tg__jueyu.name) and player.phase == Player.Play and table.find(player.room.alive_players, function(p) return not player:inMyAttackRange(p) and p ~= player and not p:isNude() end)
   end,
   on_cost = function(self, event, target, player)
-    return player.room:askToSkillInvoke(player, { skill_name = skill.name, prompt = "#tg__jueyu-ask" })
+    return player.room:askToSkillInvoke(player, { skill_name = tg__jueyu.name, prompt = "#tg__jueyu-ask" })
   end,
   on_use = function(self, event, target, player)
     local room = player.room
@@ -36,7 +36,7 @@ tg__jueyu:addEffect(fk.EventPhaseStart, {
     for _, pid in ipairs(targets) do
       local p = room:getPlayerById(pid)
       if not player.dead and not p.dead then
-        local id = room:askToChooseCard(player, { target = p, flag = "he", skill_name = skill.name })
+        local id = room:askToChooseCard(player, { target = p, flag = "he", skill_name = tg__jueyu.name })
         room:obtainCard(player, id)
         room:setPlayerMark(p, "@@tg__jueyu-phase", 1)
       end
@@ -49,7 +49,7 @@ tg__jueyu:addEffect(fk.EventPhaseEnd, {
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player)
     if player == target and player:usedSkillTimes(tg__jueyu.name, Player.HistoryPhase) > 0 and not player:isNude() then
-      local events = player.room.logic:getEventsOfScope(GameEvent.UseCard, 998, function(e) 
+      local events = player.room.logic:getEventsOfScope(GameEvent.UseCard, 998, function(e)
         local use = e.data[1]
         return use.from == player.id
       end, Player.HistoryTurn)
@@ -66,9 +66,9 @@ tg__jueyu:addEffect(fk.EventPhaseEnd, {
       end)
     end
   end,
-  on_use = function (skill, event, target, player)
+  on_use = function(self, event, target, player)
     local room = player.room
-    local events = room.logic:getEventsOfScope(GameEvent.UseCard, 998, function(e) 
+    local events = room.logic:getEventsOfScope(GameEvent.UseCard, 998, function(e)
       local use = e.data[1]
       return use.from == player.id
     end, Player.HistoryTurn)
@@ -82,15 +82,15 @@ tg__jueyu:addEffect(fk.EventPhaseEnd, {
     end
     targets = table.map(table.filter(room.alive_players, function(p)
       return p:getMark("@@tg__jueyu-phase") > 0 and not table.contains(targets, p.id)
-    end), function(p) 
+    end), function(p)
         return p.id
       end)
     room:sortPlayersByAction(targets)
     for _, pid in ipairs(targets) do
       local target = room:getPlayerById(pid)
       if not player.dead and not target.dead then
-        local c = room:askToCards(player, { min_num = 1, max_num = 1, include_equip = true, skill_name = skill.name, prompt = "#tg__jueyu_pay-card::" .. target.id })[1]
-        room:moveCardTo(c, Player.Hand, target, fk.ReasonGive, skill.name, nil, false)
+        local c = room:askToCards(player, { min_num = 1, max_num = 1, include_equip = true, skill_name = tg__jueyu.name, prompt = "#tg__jueyu_pay-card::" .. target.id })[1]
+        room:moveCardTo(c, Player.Hand, target, fk.ReasonGive, tg__jueyu.name, nil, false)
       end
     end
   end,

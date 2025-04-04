@@ -3,7 +3,7 @@ local shuangkai = fk.CreateSkill {
 }
 
 Fk:loadTranslationTable{
-  ['tg__shuangkai'] = '爽慨',
+  ['tg__shuaikai'] = '爽慨',
   ['#tg__shuaikai_select'] = '爽慨',
   ['#tg__shuangkai-select'] = '爽慨：你可弃置一张装备牌并选择牌面上一个数字，令攻击范围内至多等量角色各摸一张牌；若没有数字，则改为交给一名其他角色',
   ['#tg__shuangkai-choose'] = '爽慨：选择攻击范围内至多 %arg 名角色，各摸一张牌',
@@ -12,15 +12,15 @@ Fk:loadTranslationTable{
 }
 
 shuangkai:addEffect(fk.EventPhaseChanging, {
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(event, target, player)
     return player:hasSkill(shuangkai.name) and target == player and data.to == Player.NotActive
   end,
-  on_cost = function(self, event, target, player)
+  on_cost = function(event, target, player)
     local card
     local _, ret = player.room:askToUseActiveSkill(player, {
       skill_name = "#tg__shuaikai_select",
       prompt = "#tg__shuangkai-select",
-      cancelable = true,
+      cancelable = true
     })
     if ret then
       card = Fk:getCardById(ret.cards[1])
@@ -30,15 +30,13 @@ shuangkai:addEffect(fk.EventPhaseChanging, {
       return true
     end
   end,
-  on_use = function(self, event, target, player)
+  on_use = function(event, target, player)
     local room = player.room
     local card = event:getCostData(self)
     local num
     if card.sub_type == Card.SubtypeWeapon then
       num = card.attack_range
-    elseif card.sub_type == Card.SubtypeDefensiveRide then
-      num = 1
-    elseif card.sub_type == Card.SubtypeOffensiveRide then
+    elseif card.sub_type == Card.SubtypeDefensiveRide or card.sub_type == Card.SubtypeOffensiveRide then
       num = 1
     end
     if num then
@@ -47,10 +45,10 @@ shuangkai:addEffect(fk.EventPhaseChanging, {
       if #targets == 0 then return false end
       local tos = room:askToChoosePlayers(player, {
         skill_name = shuangkai.name,
-        targets = table.map(room.alive_players, function(p) return p.id end),
+        targets = table.map(room:getAlivePlayers(), function(p) return p.id end),
         min_num = 1,
         max_num = num,
-        prompt = "#tg__shuangkai-choose:::" .. num
+        prompt = "#tg__shuangkai-choose:::"..num
       })
       room:sortPlayersByAction(tos)
       for _, pid in ipairs(tos) do
@@ -58,20 +56,24 @@ shuangkai:addEffect(fk.EventPhaseChanging, {
         if not p.dead then p:drawCards(1, shuangkai.name) end
       end
     else
-      local to = room:askToChoosePlayers(player, {
+      local tos = room:askToChoosePlayers(player, {
         skill_name = shuangkai.name,
         targets = table.map(room:getOtherPlayers(player), function(p) return p.id end),
         min_num = 1,
         max_num = 1,
         prompt = "#tg__shuangkai-give:::" .. card:toLogString()
-      })[1]
+      })
+      local to = tos[1]
       room:moveCardTo(card.id, Player.Hand, room:getPlayerById(to), fk.ReasonGive, shuangkai.name, nil, true)
     end
   end,
 })
 
-local tg__shuaikai_select = fk.CreateActiveSkill{
-  name = "#tg__shuaikai_select",
+local shuaikai_select = fk.CreateSkill {
+  name = "#tg__shuaikai_select"
+}
+
+shuaikai_select:addEffect('active', {
   can_use = function(self, player) return false end,
   target_num = 0,
   card_num = 1,
@@ -83,6 +85,6 @@ local tg__shuaikai_select = fk.CreateActiveSkill{
       end
     end
   end,
-}
+})
 
 return shuangkai

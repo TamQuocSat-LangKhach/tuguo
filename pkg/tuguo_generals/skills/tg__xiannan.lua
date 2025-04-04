@@ -1,4 +1,4 @@
-local xiannan = fk.CreateSkill {
+local tg__xiannan = fk.CreateSkill {
   name = "tg__xiannan"
 }
 
@@ -9,10 +9,10 @@ Fk:loadTranslationTable{
   [':tg__xiannan'] = '当你于一轮内失去第一张牌或第X张牌后（X为你的体力上限），你可摸一张牌，令你于此回合下一次造成或受到的伤害+1。',
 }
 
-xiannan:addEffect(fk.AfterCardsMove, {
+tg__xiannan:addEffect(fk.AfterCardsMove, {
   anim_type = "drawcard",
-  can_trigger = function(self, event, target, player, data)
-    if not player:hasSkill(xiannan.name) then return false end
+  can_trigger = function(self, event, target, player)
+    if not player:hasSkill(skill.name) then return false end
     local num = 0
     local ret = true
     local room = player.room
@@ -35,40 +35,24 @@ xiannan:addEffect(fk.AfterCardsMove, {
     end, Player.HistoryRound)
     return (num >= 1 or num >= player.maxHp) and ret
   end,
-  on_use = function(self, event, target, player, data)
-    player:drawCards(1, xiannan.name)
+  on_use = function(self, event, target, player)
+    player:drawCards(1, tg__xiannan.name)
     player.room:addPlayerMark(player, "@tg__xiannian-turn", 1)
   end,
 })
 
-xiannan:addEffect(fk.DamageInflicted, {
+tg__xiannan:addEffect({fk.DamageInflicted, fk.DamageCaused}, {
   frequency = Skill.Compulsory,
   mute = true,
-  can_trigger = function(self, event, target, player, data)
+  can_trigger = function(self, event, target, player)
     return target == player and player:getMark("@tg__xiannian-turn") > 0
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    room:notifySkillInvoked(player, "tg__xiannan", "negative")
+    room:notifySkillInvoked(player, "tg__xiannan", event == fk.DamageCaused and "offensive" or "negative")
     data.damage = data.damage + player:getMark("@tg__xiannian-turn")
     room:setPlayerMark(player, "@tg__xiannian-turn", 0)
   end,
 })
 
-xiannan:addEffect(fk.DamageCaused, {
-  frequency = Skill.Compulsory,
-  mute = true,
-  can_trigger = function(self, event, target, player, data)
-    return target == player and player:getMark("@tg__xiannian-turn") > 0
-  end,
-  on_use = function(self, event, target, player, data)
-    local room = player.room
-    room:notifySkillInvoked(player, "tg__xiannan", "offensive")
-    data.damage = data.damage + player:getMark("@tg__xiannian-turn")
-    room:setPlayerMark(player, "@tg__xiannian-turn", 0)
-  end,
-})
-
-return xiannan
-  ```
-
+return tg__xiannan

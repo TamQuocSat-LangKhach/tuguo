@@ -14,13 +14,10 @@ Fk:loadTranslationTable{
 tg__pingxi:addEffect(fk.Damaged, {
   anim_type = "masochism",
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(tg__pingxi.name) and data.from and data.from:getHandcardNum() > player:getHandcardNum() and #data.from:getCardIds{Player.Hand, Player.Equip} > 1
+    return target == player and player:hasSkill(skill.name) and data.from and data.from:getHandcardNum() > player:getHandcardNum() and #data.from:getCardIds{Player.Hand, Player.Equip} > 1
   end,
   on_cost = function(self, event, target, player, data)
-    return player.room:askToSkillInvoke(player, {
-      skill_name = tg__pingxi.name,
-      prompt = "#tg__pingxi-ask:" .. data.from.id,
-    })
+    return player.room:askToSkillInvoke(player, { skill_name = skill.name, prompt = "#tg__pingxi-ask:" .. data.from.id })
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
@@ -30,18 +27,19 @@ tg__pingxi:addEffect(fk.Damaged, {
       max = 2,
       target = from,
       flag = "he",
-      skill_name = tg__pingxi.name,
+      skill_name = skill.name
     })
-    room:throwCard(cids, tg__pingxi.name, from, player)
+    room:throwCard(cids, skill.name, from, player)
     local cards1, cards2 = Fk:getCardById(cids[1]), Fk:getCardById(cids[2])
     if cards1.suit == cards2.suit then
-      local cards = room:askToGuanxing(player, {
+      local guanxing_result = room:askToGuanxing(player, {
         cards = cids,
-        bottom_limit = {1, 1},
+        bottom_limit = { 1, 1 },
         skill_name = "tg__pingxiGain",
         skip = true,
-        area_names = {"tg__pingxiNoGet", "tg__pingxiGet"},
-      }).bottom
+        area_names = { "tg__pingxiNoGet", "tg__pingxiGet" }
+      })
+      local cards = guanxing_result.bottom
       if #cards > 0 then
         room:obtainCard(player, cards[1], true, fk.ReasonJustMove)
       end
@@ -51,7 +49,7 @@ tg__pingxi:addEffect(fk.Damaged, {
         from = player,
         to = from,
         damage = 1,
-        skillName = tg__pingxi.name,
+        skillName = skill.name,
       }
     end
   end,

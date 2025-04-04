@@ -64,7 +64,7 @@ tg__zunxiu:addEffect(fk.CardResponding, {
 })
 
 tg__zunxiu:addEffect('filter', {
-  card_filter = function(self, player, to_select)
+  card_filter = function(self, player, to_select, selected)
     if player:getMark("@tg__zunxiu-turn") == 0 or table.contains(player.player_cards[Player.Equip], to_select.id) or table.contains(player.player_cards[Player.Judge], to_select.id) then return false end
     return to_select.type == Card.TypeBasic
   end,

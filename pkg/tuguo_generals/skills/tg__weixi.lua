@@ -17,10 +17,7 @@ tg__weixi:addEffect(fk.Damaged, {
     return player:hasSkill(tg__weixi.name) and player:usedSkillTimes(tg__weixi.name, Player.HistoryGame) < 1 and (data.extra_data or {}).weixicheak and target ~= player and table.find(player.room.alive_players, function(p) return p.hp >= target.hp and p ~= target end)
   end,
   on_cost = function(self, event, target, player, data)
-    return player.room:askToSkillInvoke(player, {
-      skill_name = tg__weixi.name,
-      prompt = "#tg__weixi::" .. target.id
-    })
+    return player.room:askToSkillInvoke(player, {skill_name = tg__weixi.name, prompt = "#tg__weixi::" .. target.id})
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room

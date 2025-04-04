@@ -29,10 +29,10 @@ tg__jiancheng:addEffect('viewas', {
     local choice = skill.interaction.data
     if not choice then return end
     local c = Fk:cloneCard(choice)
-    c.skillName = skill.name
+    c.skillName = tg__jiancheng.name
     return c
   end,
-  before_use = function(self, player, use, event)
+  before_use = function(self, player, use)
     local room = player.room
     room:addPlayerMark(player, "@tg__jiancheng-round")
     if #room.draw_pile < 2 then
@@ -42,7 +42,7 @@ tg__jiancheng:addEffect('viewas', {
       end
     end
     local cids = {room:getNCards(1)[1], room:getNCards(1, "bottom")[1]}
-    room:moveCardTo(cids, Card.Processing, nil, fk.ReasonJustMove, skill.name)
+    room:moveCardTo(cids, Card.Processing, nil, fk.ReasonJustMove, tg__jiancheng.name)
     room:sendFootnote(cids, {
       type = "##ShowCard",
       from = player.id,
@@ -55,13 +55,14 @@ tg__jiancheng:addEffect('viewas', {
       room:setPlayerMark(player, "@tg__jiancheng-round", 0)
       room:setPlayerMark(player, "@@tg__jiancheng_invalid-round", 1)
     else
-      room:moveCardTo(cids[1], Card.DrawPile, nil, fk.ReasonPut, skill.name, nil, false)
+      room:moveCardTo(cids[1], Card.DrawPile, nil, fk.ReasonPut, tg__jiancheng.name, nil, false)
+      room:moveCardTo(cids[2], Card.DrawPile, nil, fk.ReasonPut, tg__jiancheng.name, nil, false)
       local move1 = {
         ids = {cids[2]},
         fromArea = Card.Processing,
         toArea = Card.DrawPile,
         moveReason = fk.ReasonJustMove,
-        skillName = skill.name,
+        skillName = tg__jiancheng.name,
         drawPilePosition = -1,
       }
       local move2 = {
@@ -69,7 +70,7 @@ tg__jiancheng:addEffect('viewas', {
         fromArea = Card.Processing,
         toArea = Card.DrawPile,
         moveReason = fk.ReasonJustMove,
-        skillName = skill.name,
+        skillName = tg__jiancheng.name,
       }
       room:moveCards(move1, move2)
     end

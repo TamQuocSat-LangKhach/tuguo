@@ -7,13 +7,15 @@ Fk:loadTranslationTable{
 }
 
 tg__fenlun:addEffect('viewas', {
-  card_filter = function(self, player, card) return false end,
+  card_filter = function(self, player, card)
+    return false
+  end,
   card_num = 0,
-  interaction = function(self)
+  interaction = function(self, player)
     local allCardNames = {}
     for _, name in ipairs(player:getMark("_tg__fenlun_cards")) do
       local card = Fk:cloneCard(name)
-      card.skillName = tg__fenlun.name
+      card.skillName = skill.name
       if not player:prohibitUse(card) and player:canUse(card) then
         table.insertIfNeed(allCardNames, name)
       end
@@ -21,10 +23,10 @@ tg__fenlun:addEffect('viewas', {
     return UI.ComboBox { choices = allCardNames, all_choices = player:getMark("_tg__fenlun_cards") }
   end,
   view_as = function(self, player, cards)
-    local choice = self.interaction.data
+    local choice = skill.interaction.data
     if not choice then return end
     local c = Fk:cloneCard(choice)
-    c.skillName = tg__fenlun.name
+    c.skillName = skill.name
     return c
   end,
   enabled_at_play = function(self, player)

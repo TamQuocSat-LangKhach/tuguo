@@ -11,7 +11,7 @@ Fk:loadTranslationTable{
 tg__zhoubing:addEffect(fk.EventPhaseChanging, {
   anim_type = "offensive",
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(tg__zhoubing) and data.to == Player.NotActive and target ~= player and target.skipped_phases and not player:prohibitUse(Fk:cloneCard("slash"))
+    return player:hasSkill(tg__zhoubing.name) and data.to == Player.NotActive and target ~= player and target.skipped_phases and not player:prohibitUse(Fk:cloneCard("slash"))
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
@@ -25,21 +25,21 @@ tg__zhoubing:addEffect(fk.EventPhaseChanging, {
     local availableTargets = table.map(table.filter(room.alive_players, function(p) return p ~= player and not player:isProhibited(p, card) end), function(p) return p.id end)
     if #availableTargets == 0 then return false end
     local targets = room:askToChoosePlayers(player, {
-      targets = table.map(availableTargets, function(id) return room:getPlayerById(id) end),
+      targets = availableTargets,
       min_num = n,
       max_num = n,
       prompt = "#tg__zhoubing-choose:::" .. n,
       skill_name = tg__zhoubing.name,
-      cancelable = true
+      cancelable = true,
     })
     if #targets > 0 then
-      event:setCostData(skill, targets)
+      event:setCostData(self, targets)
       return true
     end
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local targets = table.map(event:getCostData(skill), function(pid) return room:getPlayerById(pid) end)
+    local targets = table.map(event:getCostData(self), function(pid) return room:getPlayerById(pid) end)
     room:useVirtualCard("slash", nil, player, targets, tg__zhoubing.name, true)
   end,
 })

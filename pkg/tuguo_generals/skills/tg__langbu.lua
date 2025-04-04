@@ -9,9 +9,8 @@ Fk:loadTranslationTable{
 }
 
 langbu:addEffect(fk.BeforeDrawCard, {
-  global = false,
   can_trigger = function(self, event, target, player)
-    if target == player and player:hasSkill(skill.name) then
+    if target == player and player:hasSkill(langbu) then
       local card = Fk:cloneCard("avoiding_disadvantages")
       return not player:prohibitUse(card) and not player:isProhibited(player, card)
     end
@@ -21,9 +20,7 @@ langbu:addEffect(fk.BeforeDrawCard, {
     player:broadcastSkillInvoke(langbu.name)
     room:notifySkillInvoked(player, langbu.name, player:getMark("@tg__langbu-round") < 3 and "drawcard" or "negative")
     room:useVirtualCard("avoiding_disadvantages", nil, player, player, langbu.name) --摆
-    if not player.dead then 
-      room:addPlayerMark(player, "@tg__langbu-round") 
-    end
+    if not player.dead then room:addPlayerMark(player, "@tg__langbu-round") end
   end,
 })
 

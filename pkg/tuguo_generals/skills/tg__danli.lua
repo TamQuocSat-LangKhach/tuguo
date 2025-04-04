@@ -11,7 +11,7 @@ Fk:loadTranslationTable{
 tg__danli:addEffect(fk.EventPhaseStart, {
   anim_type = "drawcard",
   can_trigger = function(self, event, target, player)
-    return target == player and player:hasSkill(skill.name) and player.phase < Player.NotActive and player.phase > Player.RoundStart and player:usedSkillTimes(tg__danli.name) < player:getLostHp()+1
+    return target == player and player:hasSkill(tg__danli.name) and player.phase < Player.NotActive and player.phase > Player.RoundStart and player:usedSkillTimes(tg__danli.name) < player:getLostHp()+1
   end,
   on_cost = function(self, event, target, player)
     local phase_name_table = {
@@ -23,7 +23,7 @@ tg__danli:addEffect(fk.EventPhaseStart, {
       [7] = "phase_finish",
     }
     return player.room:askToSkillInvoke(player, {
-      skill_name = skill.name,
+      skill_name = tg__danli.name,
       prompt = "#tg__danli-ask:::" .. phase_name_table[player.phase]
     })
   end,
@@ -32,9 +32,9 @@ tg__danli:addEffect(fk.EventPhaseStart, {
     local cid = player.room:askToChooseCard(player, {
       target = player,
       flag = "hej",
-      skill_name = skill.name
+      skill_name = tg__danli.name
     })
-    player.room:throwCard({cid}, skill.name, player, player)
+    player.room:throwCard({cid}, tg__danli.name, player, player)
   end,
 })
 

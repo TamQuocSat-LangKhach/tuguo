@@ -1,4 +1,4 @@
-local biyue = fk.CreateSkill {
+local siye = fk.CreateSkill {
   name = "tg__siye"
 }
 
@@ -10,21 +10,21 @@ Fk:loadTranslationTable{
   [':tg__siye'] = '当主公受到【杀】的伤害后，你可以摸X+1张牌（X为本轮〖狼逋〗发动过的次数且至多为3），然后本轮你必须发动此技能。',
 }
 
-biyue:addEffect(fk.Damaged, {
-  can_trigger = function(self, event, target, player)
-    if not player:hasSkill(biyue.name) then return false end
+siye:addEffect(fk.Damaged, {
+  can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(skill.name) then return false end
     return target.role == "lord" and data.card and data.card.trueName == "slash"
   end,
-  on_cost = function(self, event, target, player)
+  on_cost = function(self, event, target, player, data)
     return player:getMark("@@tg__siye-round") > 0 or player.room:askToSkillInvoke(player, {
-      skill_name = biyue.name,
+      skill_name = skill.name,
       prompt = "#tg__siye:::" .. math.min(player:getMark("@tg__langbu-round"), 3) + 1
     })
   end,
-  on_use = function(self, event, target, player)
-    player:drawCards(math.min(player:getMark("@tg__langbu-round"), 3) + 1, biyue.name)
+  on_use = function(self, event, target, player, data)
+    player:drawCards(math.min(player:getMark("@tg__langbu-round"), 3) + 1, siye.name)
     if not player.dead then player.room:setPlayerMark(player, "@@tg__siye-round", 1) end
   end,
 })
 
-return biyue
+return siye

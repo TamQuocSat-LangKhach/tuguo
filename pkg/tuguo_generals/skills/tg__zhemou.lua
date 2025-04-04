@@ -1,4 +1,4 @@
-local biyue = fk.CreateSkill {
+local tg__zhemou = fk.CreateSkill {
   name = "tg__zhemou"
 }
 
@@ -8,13 +8,15 @@ Fk:loadTranslationTable{
   [':tg__zhemou'] = '限定技，你可以跳过出牌阶段和弃牌阶段，视为依次使用无距离和目标数限制的【顺手牵羊】和【杀】。',
 }
 
-biyue:addEffect(fk.EventPhaseChanging, {
+tg__zhemou:addEffect(fk.EventPhaseChanging, {
   frequency = Skill.Limited,
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(skill.name) and player:usedSkillTimes(biyue.name, Player.HistoryGame) < 1 and not (player:prohibitUse(Fk:cloneCard("slash")) and player:prohibitUse(Fk:cloneCard("snatch"))) and data.to == Player.Play and not player.skipped_phases[Player.Discard]
+    return target == player and player:hasSkill(tg__zhemou) and player:usedSkillTimes(tg__zhemou.name, Player.HistoryGame) < 1 
+      and not (player:prohibitUse(Fk:cloneCard("slash")) and player:prohibitUse(Fk:cloneCard("snatch"))) 
+      and data.to == Player.Play and not player.skipped_phases[Player.Discard]
   end,
   on_cost = function(self, event, target, player, data)
-    return player.room:askToSkillInvoke(player, { skill_name = biyue.name, prompt = "#tg__zhemou" })
+    return player.room:askToSkillInvoke(player, { skill_name = tg__zhemou.name, prompt = "#tg__zhemou" })
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
@@ -29,15 +31,15 @@ biyue:addEffect(fk.EventPhaseChanging, {
           min_num = 1,
           max_num = 99,
           prompt = "#tg__zhemou-" .. c,
-          skill_name = biyue.name,
+          skill_name = tg__zhemou.name,
           cancelable = false,
           targets = availableTargets
         }), function(pid) return room:getPlayerById(pid) end)
-        room:useVirtualCard(c, nil, player, targets, biyue.name, true)
+        room:useVirtualCard(c, nil, player, targets, tg__zhemou.name, true)
       end
     end
     return true
   end,
 })
 
-return biyue
+return tg__zhemou

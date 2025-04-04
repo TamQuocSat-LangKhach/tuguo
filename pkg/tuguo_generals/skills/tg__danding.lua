@@ -52,13 +52,11 @@ tg__danding:addEffect(fk.Damage, {
       data = card_data,
       cancelable = false
     })
-
     local new_ret = table.filter(ret, function(id) return id ~= -1 end)
     local hand_num = #ret - #new_ret
     if hand_num > 0 then
       table.insertTable(new_ret, table.random(target:getCardIds(Player.Hand), hand_num))
     end
-
     local moveInfos = {}
     local cards1 = {}
     for i = #new_ret, 1, -1 do
@@ -67,33 +65,29 @@ tg__danding:addEffect(fk.Damage, {
         table.remove(new_ret, i)
       end
     end
-
     local to_draw = not table.find(cards1, function (id)
       return room:getCardArea(id) ~= Player.Judge
     end)
-
     if #cards1 > 0 then
       table.insert(moveInfos, {
         from = player.id,
         ids = cards1,
-        to_area = Card.DiscardPile,
-        move_reason = fk.ReasonDiscard,
+        toArea = Card.DiscardPile,
+        moveReason = fk.ReasonDiscard,
         proposer = player.id,
-        skill_name = tg__danding.name,
+        skillName = tg__danding.name,
       })
     end
-
     if #new_ret > 0 then
       table.insert(moveInfos, {
         from = target.id,
         ids = new_ret,
-        to_area = Card.DiscardPile,
-        move_reason = fk.ReasonDiscard,
+        toArea = Card.DiscardPile,
+        moveReason = fk.ReasonDiscard,
         proposer = player.id,
-        skill_name = tg__danding.name,
+        skillName = tg__danding.name,
       })
     end
-
     room:moveCards(table.unpack(moveInfos))
     if not target.dead and to_draw then
       target:drawCards(1, tg__danding.name)

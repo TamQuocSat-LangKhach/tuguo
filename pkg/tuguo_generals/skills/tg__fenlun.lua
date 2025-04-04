@@ -4,7 +4,7 @@ local tg__fenlun = fk.CreateSkill {
 
 Fk:loadTranslationTable{
   ['tg__fenlun'] = '忿论',
-  ['#tg__fenlun-invoke'] = '忿论：你可与 %src 拼点',
+  ['#tg__fenlun-invoke'] = '忿论：你可与 %src 点',
   ['tg__fenlun_vs'] = '忿论',
   ['#tg__fenlun-vs'] = '忿论：你可视为使用一张 %src 此回合使用过的基本或普通锦囊牌',
   ['#tg__fenlun-again'] = '忿论：你可与一名角色拼点',
@@ -38,10 +38,7 @@ tg__fenlun:addEffect(fk.EventPhaseChanging, {
           table.insertIfNeed(cards, e.data[1].card.name)
         end)
         room:setPlayerMark(player, "_tg__fenlun_cards", cards)
-        local success, dat = room:askToUseViewAsSkill(player, "tg__fenlun_vs", {
-          skill_name = "#tg__fenlun-vs:" .. target.id,
-          cancelable = true
-        })
+        local success, dat = room:askForUseViewAsSkill(player, "tg__fenlun_vs", "#tg__fenlun-vs:" .. target.id, true)
         if success then
           local card = Fk.skills["tg__fenlun_vs"]:viewAs(dat.cards)
           local use = {
